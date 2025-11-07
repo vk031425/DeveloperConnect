@@ -34,3 +34,85 @@ body {
 .form button:hover {
   background-color: #0097a7;
 }
+
+.create-post {
+  margin-bottom: 20px;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+.create-post textarea {
+  width: 100%;
+  height: 70px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  resize: none;
+  font-family: inherit;
+}
+
+.create-post button {
+  margin-top: 10px;
+  background-color: #00bcd4;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.post-card {
+  background: white;
+  margin-bottom: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.post-text {
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.post-actions button {
+  background: none;
+  border: none;
+  color: #e91e63;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.post-comments {
+  margin-top: 10px;
+}
+
+.comment-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.comment-form input {
+  flex: 1;
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.comment-form button {
+  background-color: #00bcd4;
+  border: none;
+  color: white;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+

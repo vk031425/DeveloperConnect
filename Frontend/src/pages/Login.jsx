@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api/axiosconfig.js";
+import api from "../api/axiosConfig";
 import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { setUser } = useAuth();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -16,16 +17,17 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
-      // later this will call backend endpoint /api/auth/login
-      // const res = await api.post("/auth/login", formData);
-      const fakeUser = { name: "Vinay", email: formData.email }; // demo user
-      login(fakeUser);
+      const res = await api.post("/auth/login", formData);
+      setUser(res.data.user);
       alert("Login successful!");
       navigate("/feed");
     } catch (err) {
-      setError("Invalid credentials");
+      setError(err.response?.data?.message || "Login failed.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,7 +52,9 @@ const Login = () => {
           required
         />
         {error && <p style={{ color: "red" }}>{error}</p>}
-        <button type="submit">Login</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
       </form>
     </div>
   );

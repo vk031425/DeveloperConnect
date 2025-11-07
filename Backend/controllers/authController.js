@@ -37,12 +37,24 @@ export const loginUser = async (req, res) => {
       expiresIn: "7d",
     });
 
+    //set HTTP-only cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false, // set true in production (HTTPS)
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     res.status(200).json({
       message: "Login successful",
-      token,
       user: { id: user._id, name: user.name, email: user.email },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+};
+
+export const logoutUser = (req, res) => {
+  res.clearCookie("token");
+  res.status(200).json({ message: "Logged out successfully" });
 };

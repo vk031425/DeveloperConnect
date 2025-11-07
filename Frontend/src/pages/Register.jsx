@@ -1,5 +1,5 @@
 import { useState } from "react";
-import api from "../api/axiosconfig.js";
+import api from "../api/axiosConfig";
 import { useNavigate } from "react-router-dom";
 
 const Register = () => {
@@ -21,7 +21,7 @@ const Register = () => {
 
     try {
       // later this will call backend endpoint /api/auth/register
-      // const res = await api.post("/auth/register", formData);
+      const res = await api.post("/auth/register", formData);
       console.log("Registered:", formData);
       alert("Registration successful!");
       navigate("/login");

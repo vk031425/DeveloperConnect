@@ -6,8 +6,8 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/login");
   };
 
@@ -24,11 +24,7 @@ const Navbar = () => {
             <li><Link to="/register">Register</Link></li>
           </>
         ) : (
-          <li>
-            <button onClick={handleLogout} className="logout-btn">
-              Logout
-            </button>
-          </li>
+          <li><button onClick={handleLogout} className="logout-btn">Logout</button></li>
         )}
       </ul>
     </nav>
