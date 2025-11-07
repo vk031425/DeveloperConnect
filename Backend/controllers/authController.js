@@ -4,20 +4,29 @@ import User from "../models/User.js";
 
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, username, email, password } = req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ message: "User already exists" });
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail)
+      return res.status(400).json({ message: "Email already exists" });
 
-    bcrypt.genSalt(10,function(err,salt){
-        if(err) throw err;
-        bcrypt.hash(password,salt, async function(err,hash){
-            if(err) throw err;
-            const user = await User.create({ name, email, password: hash });
-            res.status(201).json({ message: "User registered successfully", user });
-        })
-    })
+    const existingUsername = await User.findOne({ username });
+    if (existingUsername)
+      return res.status(400).json({ message: "Username already taken" });
+
+    bcrypt.genSalt(10, function (err, salt) {
+      if (err) throw err;
+      bcrypt.hash(password, salt, async function (err, hash) {
+        if (err) throw err;
+        const user = await User.create({
+          name,
+          username,
+          email,
+          password: hash,
+        });
+        res.status(201).json({ message: "User registered successfully", user });
+      });
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -47,7 +56,7 @@ export const loginUser = async (req, res) => {
 
     res.status(200).json({
       message: "Login successful",
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, username: user.username, name: user.name, email: user.email },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

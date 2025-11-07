@@ -1,26 +1,33 @@
 import Post from "../models/Post.js";
 
-// 📝 Create new post
+//Create new post
 export const createPost = async (req, res) => {
   try {
-    const { text, image } = req.body;
-    const post = await Post.create({
-      author: req.user._id,
+    console.log("Received text:", req.body.text);
+    console.log("Received file:", req.file ? req.file.path : "No file");
+    const { text } = req.body;
+    const imageUrl = req.file ? req.file.path : null; // Cloudinary gives full URL
+
+    const newPost = new Post({
       text,
-      image,
+      image: imageUrl,
+      author: req.user._id,
     });
-    res.status(201).json(post);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+
+    await newPost.save();
+    res.status(201).json(newPost);
+  } catch (err) {
+    console.error("Error creating post:", err);
+    res.status(500).json({ message: err.message });
   }
 };
 
-// 📃 Get all posts (for feed)
+//Get all posts (for feed)
 export const getFeed = async (req, res) => {
   try {
     const posts = await Post.find()
-      .populate("author", "name email avatar")
-      .populate("comments.user", "name avatar")
+      .populate("author", "username name email avatar")
+      .populate("comments.user", "username name avatar")
       .sort({ createdAt: -1 });
     res.json(posts);
   } catch (error) {
@@ -38,7 +45,9 @@ export const toggleLike = async (req, res) => {
     const liked = post.likes.includes(userId);
 
     if (liked) {
-      post.likes = post.likes.filter((id) => id.toString() !== userId.toString());
+      post.likes = post.likes.filter(
+        (id) => id.toString() !== userId.toString()
+      );
     } else {
       post.likes.push(userId);
     }
@@ -50,7 +59,7 @@ export const toggleLike = async (req, res) => {
   }
 };
 
-// 💬 Add comment
+//Add comment
 export const addComment = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -60,7 +69,7 @@ export const addComment = async (req, res) => {
     post.comments.push(comment);
     await post.save();
 
-    await post.populate("comments.user", "name avatar");
+    await post.populate("comments.user", "username name avatar");
 
     res.json(post.comments);
   } catch (error) {
@@ -75,7 +84,9 @@ export const deletePost = async (req, res) => {
     if (!post) return res.status(404).json({ message: "Post not found" });
 
     if (post.author.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "You can delete only your own post" });
+      return res
+        .status(403)
+        .json({ message: "You can delete only your own post" });
     }
 
     await post.deleteOne();

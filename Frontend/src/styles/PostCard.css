@@ -1,0 +1,148 @@
+/* --- PostCard Enhancement --- */
+/* --- Post Header Inline Layout --- */
+.post-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.post-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.post-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.post-username {
+  font-weight: 600;
+  font-size: 15px;
+  color: #222;
+  text-decoration: none;
+}
+
+.post-username:hover {
+  text-decoration: underline;
+  color: #007bff;
+}
+
+
+.post-date {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+}
+
+
+.post-actions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* --- Like Button Visual Toggle --- */
+.like-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #555;
+  transition: all 0.15s ease;
+}
+
+.like-btn:hover {
+  transform: scale(1.1);
+}
+
+.like-btn.liked {
+  color: #e63946; /* red when liked */
+  font-weight: 600;
+  transform: scale(1.1);
+}
+
+
+.post-comments {
+  margin-top: 15px;
+  background: #fafafa;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.comment-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #444;
+}
+
+.comment-list {
+  max-height: 150px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.comment-item {
+  background: #fff;
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  font-size: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.comment-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comment-form input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.comment-form input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.comment-form button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.comment-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.comment-username {
+  font-weight: 600;
+  color: #222;
+  text-decoration: none;
+  margin-right: 5px;
+}
+
+.comment-username:hover {
+  color: #007bff;
+  text-decoration: underline;
+}
+

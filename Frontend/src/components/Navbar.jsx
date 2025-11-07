@@ -17,7 +17,7 @@ const Navbar = () => {
       <ul className="nav-links">
         <li><Link to="/feed">Feed</Link></li>
         <li><Link to="/dashboard">Dashboard</Link></li>
-        <li><Link to="/profile/username">Profile</Link></li>
+        <li>{user && <Link to={`/profile/${user.username}`}>Profile</Link>}</li>
         {!user ? (
           <>
             <li><Link to="/login">Login</Link></li>

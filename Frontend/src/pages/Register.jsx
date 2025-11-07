@@ -1,62 +1,65 @@
 import { useState } from "react";
 import api from "../api/axiosConfig";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Register = () => {
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     name: "",
+    username: "",
     email: "",
     password: "",
   });
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-
     try {
-      // later this will call backend endpoint /api/auth/register
-      const res = await api.post("/auth/register", formData);
-      console.log("Registered:", formData);
-      alert("Registration successful!");
-      navigate("/login");
+      const res = await api.post("/auth/register", form);
+      setUser(res.data);
+      navigate("/feed");
     } catch (err) {
-      setError("Registration failed. Try again.");
+      setError(err.response?.data?.message || "Registration failed");
     }
   };
 
   return (
     <div className="page">
       <h2>Register</h2>
-      <form className="form" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="form">
         <input
           type="text"
           name="name"
           placeholder="Full Name"
-          value={formData.name}
+          value={form.name}
           onChange={handleChange}
-          required
+        />
+        <input
+          type="text"
+          name="username"
+          placeholder="Choose a unique username"
+          value={form.username}
+          onChange={handleChange}
         />
         <input
           type="email"
           name="email"
-          placeholder="Email Address"
-          value={formData.email}
+          placeholder="Email"
+          value={form.email}
           onChange={handleChange}
-          required
         />
         <input
           type="password"
           name="password"
           placeholder="Password"
-          value={formData.password}
+          value={form.password}
           onChange={handleChange}
-          required
         />
         {error && <p style={{ color: "red" }}>{error}</p>}
         <button type="submit">Register</button>

@@ -2,16 +2,18 @@ import { useEffect, useState } from "react";
 import api from "../api/axiosConfig";
 import PostCard from "../components/PostCard";
 import CreatePostForm from "../components/CreatePostForm";
+import "../styles/Feed.css";
 
 const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch all posts
+  // 🔄 Fetch all posts for the feed
   const fetchFeed = async () => {
     try {
       const res = await api.get("/posts/feed");
-      setPosts(res.data);
+      // Show newest first
+      setPosts(res.data.reverse());
     } catch (err) {
       console.error("Error fetching feed:", err.response?.data || err.message);
     } finally {
@@ -23,23 +25,28 @@ const Feed = () => {
     fetchFeed();
   }, []);
 
-  // Handle new post added
+  // 🆕 Handle new post added
   const handlePostCreated = (newPost) => {
     setPosts((prev) => [newPost, ...prev]);
   };
 
-  // Handle like toggle
+  // ❤️ Handle like toggle
   const handleLikeToggle = (postId, liked, likesCount) => {
     setPosts((prev) =>
       prev.map((p) =>
         p._id === postId
-          ? { ...p, likes: liked ? [...p.likes, "you"] : p.likes.slice(0, -1) }
+          ? {
+              ...p,
+              likes: liked
+                ? [...p.likes, "you"]
+                : p.likes.filter((id) => id !== "you"),
+            }
           : p
       )
     );
   };
 
-  // Handle new comment added
+  // 💬 Handle new comment added
   const handleCommentAdded = (postId, updatedComments) => {
     setPosts((prev) =>
       prev.map((p) =>
@@ -49,23 +56,31 @@ const Feed = () => {
   };
 
   return (
-    <div className="page">
-      <h2>Feed</h2>
-      <CreatePostForm onPostCreated={handlePostCreated} />
-      {loading ? (
-        <p>Loading feed...</p>
-      ) : posts.length === 0 ? (
-        <p>No posts yet. Be the first to share!</p>
-      ) : (
-        posts.map((post) => (
-          <PostCard
-            key={post._id}
-            post={post}
-            onLikeToggle={handleLikeToggle}
-            onCommentAdded={handleCommentAdded}
-          />
-        ))
-      )}
+    <div className="feed-wrapper">
+      <div className="feed-header">
+        <h2>Feed</h2>
+      </div>
+
+      <div className="feed-create">
+        <CreatePostForm onPostCreated={handlePostCreated} />
+      </div>
+
+      <div className="feed-content">
+        {loading ? (
+          <p className="feed-status">Loading feed...</p>
+        ) : posts.length === 0 ? (
+          <p className="feed-status">No posts yet. Be the first to share!</p>
+        ) : (
+          posts.map((post) => (
+            <PostCard
+              key={post._id}
+              post={post}
+              onLikeToggle={handleLikeToggle}
+              onCommentAdded={handleCommentAdded}
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 };

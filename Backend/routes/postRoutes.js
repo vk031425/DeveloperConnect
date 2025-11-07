@@ -7,10 +7,11 @@ import {
   deletePost,
 } from "../controllers/postController.js";
 import { protect } from "../middlewares/authMiddleware.js";
+import upload from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
-router.post("/", protect, createPost); // create post
+router.post("/", protect, upload.single("image"), createPost); // create post
 router.get("/feed", protect, getFeed); // get all posts
 router.put("/:id/like", protect, toggleLike); // like/unlike
 router.post("/:id/comment", protect, addComment); // comment

@@ -1,12 +1,13 @@
-import express from "express";
 import dotenv from "dotenv";
+dotenv.config();
+import express from "express";
 import cors from "cors";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
+import profileRoutes from "./routes/profileRoutes.js";
 import cookieParser from "cookie-parser";
 
-dotenv.config();
 const app = express();
 
 app.use(express.json());
@@ -21,6 +22,7 @@ connectDB();
 
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/profile", profileRoutes);
 
 app.get("/", (req, res) => {
   res.send("Developer Connect API is running");
