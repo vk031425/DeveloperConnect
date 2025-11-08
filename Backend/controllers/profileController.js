@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import Post from "../models/Post.js";
+import Notification from "../models/Notification.js";
 
 // ✅ Get current user's profile
 export const getMyProfile = async (req, res) => {
@@ -63,40 +64,55 @@ export const getProfileByUsername = async (req, res) => {
   }
 };
 
-// ✅ Follow or unfollow a user
 export const toggleFollow = async (req, res) => {
   try {
     const targetUser = await User.findOne({ username: req.params.username });
     const currentUser = await User.findById(req.user._id);
 
-    if (!targetUser)
+    if (!targetUser) {
       return res.status(404).json({ message: "User not found" });
+    }
 
-    if (targetUser._id.equals(currentUser._id))
-      return res.status(400).json({ message: "You cannot follow yourself" });
+    //Prevent following yourself
+    if (targetUser._id.equals(currentUser._id)) {
+      return res
+        .status(400)
+        .json({ message: "You cannot follow or unfollow yourself" });
+    }
 
     const alreadyFollowing = currentUser.following.includes(targetUser._id);
 
     if (alreadyFollowing) {
-      // Unfollow
-      currentUser.following.pull(targetUser._id);
-      targetUser.followers.pull(currentUser._id);
+      //Unfollow
+      currentUser.following = currentUser.following.filter(
+        (id) => !id.equals(targetUser._id)
+      );
+      targetUser.followers = targetUser.followers.filter(
+        (id) => !id.equals(currentUser._id)
+      );
     } else {
-      // Follow
+      //Follow
       currentUser.following.push(targetUser._id);
       targetUser.followers.push(currentUser._id);
+
+      //Create follow notification
+      await Notification.create({
+        recipient: targetUser._id,
+        sender: currentUser._id,
+        type: "follow",
+      });
     }
 
     await currentUser.save();
     await targetUser.save();
 
-    res.json({
+    return res.json({
       message: alreadyFollowing ? "Unfollowed user" : "Followed user",
       isFollowing: !alreadyFollowing,
       followersCount: targetUser.followers.length,
     });
   } catch (error) {
-    console.error("Follow toggle error:", error);
+    console.error("❌ Follow toggle error:", error);
     res.status(500).json({ message: error.message });
   }
 };

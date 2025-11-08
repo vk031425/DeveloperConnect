@@ -1,18 +1,23 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../api/axiosConfig";
 import PostCard from "../components/PostCard";
+import { useAuth } from "../context/AuthContext";
 import "../styles/Profile.css";
 
 const Profile = () => {
   const { username } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
   const [userData, setUserData] = useState(null);
   const [posts, setPosts] = useState([]);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showFollowers, setShowFollowers] = useState(false);
+  const [showFollowing, setShowFollowing] = useState(false);
 
-  // Fetch profile info and posts
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -34,13 +39,25 @@ const Profile = () => {
     try {
       const res = await api.post(`/profile/${username}/follow`);
       setIsFollowing(res.data.isFollowing);
-      // Update follower count dynamically
       setUserData((prev) => ({
         ...prev,
         followersCount: res.data.followersCount,
       }));
     } catch (err) {
       console.error(err.response?.data || err.message);
+    }
+  };
+
+  // 💬 Start chat with this user
+  const handleMessage = async () => {
+    try {
+      const res = await api.post("/messages/send", {
+        receiverId: userData._id,
+        text: "👋 Hey!",
+      });
+      navigate("/messages", { state: { openChatWith: userData } });
+    } catch (err) {
+      console.error("Error starting message:", err.response?.data || err.message);
     }
   };
 
@@ -63,36 +80,35 @@ const Profile = () => {
             <p className="bio">{userData.bio || "No bio available"}</p>
 
             <div className="profile-stats">
-              <span>
+              <span
+                className="stat-link"
+                onClick={() => setShowFollowers(true)}
+              >
                 <b>{userData.followersCount || 0}</b> Followers
               </span>
-              <span>
+              <span
+                className="stat-link"
+                onClick={() => setShowFollowing(true)}
+              >
                 <b>{userData.followingCount || 0}</b> Following
               </span>
             </div>
 
             {!isOwnProfile && (
-              <button
-                onClick={handleFollowToggle}
-                className={`follow-btn ${isFollowing ? "following" : ""}`}
-              >
-                {isFollowing ? "Following" : "Follow"}
-              </button>
+              <div className="profile-actions">
+                <button
+                  onClick={handleFollowToggle}
+                  className={`follow-btn ${isFollowing ? "following" : ""}`}
+                >
+                  {isFollowing ? "Following" : "Follow"}
+                </button>
+
+                <button className="message-btn" onClick={handleMessage}>
+                  💬 Message
+                </button>
+              </div>
             )}
           </div>
-        </div>
-
-        <div className="profile-links">
-          {userData.github && (
-            <a href={userData.github} target="_blank" rel="noreferrer">
-              GitHub
-            </a>
-          )}
-          {userData.linkedin && (
-            <a href={userData.linkedin} target="_blank" rel="noreferrer">
-              LinkedIn
-            </a>
-          )}
         </div>
 
         {userData.skills?.length > 0 && (
@@ -102,25 +118,56 @@ const Profile = () => {
         )}
       </div>
 
-      {/* Followers/Following lists for own profile */}
-      {isOwnProfile && (
-        <div className="followers-section">
-          <h4>Followers ({userData.followers?.length || 0})</h4>
-          <div className="follower-list">
-            {userData.followers?.map((f) => (
-              <span key={f._id} className="follower-item">
-                @{f.username}
-              </span>
-            ))}
+      {/* 🧠 Followers Modal */}
+      {showFollowers && (
+        <div className="modal-overlay" onClick={() => setShowFollowers(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Followers</h3>
+            {userData.followers?.length === 0 ? (
+              <p>No followers yet.</p>
+            ) : (
+              userData.followers.map((f) => (
+                <Link
+                  key={f._id}
+                  to={`/profile/${f.username}`}
+                  onClick={() => setShowFollowers(false)}
+                  className="follower-item"
+                >
+                  <img
+                    src={f.avatar || "https://via.placeholder.com/40"}
+                    alt="avatar"
+                  />
+                  <span>@{f.username}</span>
+                </Link>
+              ))
+            )}
           </div>
+        </div>
+      )}
 
-          <h4>Following ({userData.following?.length || 0})</h4>
-          <div className="follower-list">
-            {userData.following?.map((f) => (
-              <span key={f._id} className="follower-item">
-                @{f.username}
-              </span>
-            ))}
+      {/* 🧠 Following Modal */}
+      {showFollowing && (
+        <div className="modal-overlay" onClick={() => setShowFollowing(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Following</h3>
+            {userData.following?.length === 0 ? (
+              <p>Not following anyone.</p>
+            ) : (
+              userData.following.map((f) => (
+                <Link
+                  key={f._id}
+                  to={`/profile/${f.username}`}
+                  onClick={() => setShowFollowing(false)}
+                  className="follower-item"
+                >
+                  <img
+                    src={f.avatar || "https://via.placeholder.com/40"}
+                    alt="avatar"
+                  />
+                  <span>@{f.username}</span>
+                </Link>
+              ))
+            )}
           </div>
         </div>
       )}

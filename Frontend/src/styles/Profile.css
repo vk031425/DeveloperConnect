@@ -106,14 +106,6 @@
   margin-bottom: 15px;
 }
 
-.follower-item {
-  background: #f1f1f1;
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 13px;
-  color: #333;
-}
-
 .user-posts h3 {
   margin-bottom: 10px;
 }
@@ -123,3 +115,88 @@
   text-align: center;
   margin-top: 15px;
 }
+
+/* --- Modal Styling --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 70vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.modal-content h3 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.follower-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #222;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.follower-item:hover {
+  background: #f2f2f2;
+}
+
+.follower-item img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.stat-link {
+  cursor: pointer;
+  color: #007bff;
+}
+
+.stat-link:hover {
+  text-decoration: underline;
+}
+
+.profile-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.message-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.message-btn:hover {
+  background: #0056b3;
+}
+
+

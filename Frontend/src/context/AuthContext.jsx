@@ -1,5 +1,6 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import api from "../api/axiosConfig";
+import socket from "../socket";
 
 const AuthContext = createContext();
 
@@ -18,6 +19,12 @@ export const AuthProvider = ({ children }) => {
     };
     fetchUser();
   }, []);
+
+  useEffect(() => {
+    if (user?._id) {
+      socket.emit("register", user._id);
+    }
+  }, [user]);
 
   const logout = async () => {
     await api.post("/auth/logout");
