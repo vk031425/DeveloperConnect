@@ -50,7 +50,6 @@ const Navbar = () => {
 
       <ul className="nav-links">
         <li><Link to="/feed">Feed</Link></li>
-        <li><Link to="/dashboard">Dashboard</Link></li>
 
         {user && (
           <>

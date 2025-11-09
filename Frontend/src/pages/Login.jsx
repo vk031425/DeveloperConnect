@@ -24,6 +24,7 @@ const Login = () => {
       setUser(res.data.user);
       alert("Login successful!");
       navigate("/feed");
+      window.location.reload();
     } catch (err) {
       setError(err.response?.data?.message || "Login failed.");
     } finally {

@@ -8,12 +8,16 @@ export const getConversations = async (req, res) => {
     const conversations = await Conversation.find({
       participants: req.user._id,
     })
-      .populate("participants", "username avatar")
+      .populate({
+        path: "participants",
+        select: "username avatar name",
+      })
       .populate("lastMessage")
       .sort({ updatedAt: -1 });
 
     res.json(conversations);
   } catch (err) {
+    console.error("getConversations error:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -24,8 +28,16 @@ export const getMessages = async (req, res) => {
     const messages = await Message.find({ conversation: req.params.id })
       .populate("sender", "username avatar")
       .sort({ createdAt: 1 });
+
+    // ✅ Auto-mark messages as read when fetching
+    await Message.updateMany(
+      { conversation: req.params.id, read: false, sender: { $ne: req.user._id } },
+      { $set: { read: true } }
+    );
+
     res.json(messages);
   } catch (err) {
+    console.error("getMessages error:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -34,9 +46,10 @@ export const getMessages = async (req, res) => {
 export const sendMessage = async (req, res) => {
   try {
     const { receiverId, text } = req.body;
-    if (!receiverId || !text) return res.status(400).json({ message: "Missing fields" });
+    if (!receiverId || !text)
+      return res.status(400).json({ message: "Missing fields" });
 
-    // find or create conversation
+    // ✅ Find or create conversation
     let conversation = await Conversation.findOne({
       participants: { $all: [req.user._id, receiverId] },
     });
@@ -47,18 +60,18 @@ export const sendMessage = async (req, res) => {
       });
     }
 
-    // create message
+    // ✅ Create the new message
     const message = await Message.create({
       conversation: conversation._id,
       sender: req.user._id,
       text,
     });
 
-    // update conversation
+    // ✅ Update conversation’s last message
     conversation.lastMessage = message._id;
     await conversation.save();
 
-    // add notification if not self-messaging
+    // ✅ Avoid sending notification to self
     if (receiverId.toString() !== req.user._id.toString()) {
       await Notification.create({
         recipient: receiverId,
@@ -67,11 +80,31 @@ export const sendMessage = async (req, res) => {
       });
     }
 
-    // populate sender for immediate response
+    // ✅ Populate sender and conversation data for immediate use
     await message.populate("sender", "username avatar");
+    await conversation.populate("participants", "username avatar name");
 
-    res.status(201).json(message);
+    res.status(201).json({
+      ...message.toObject(),
+      conversation: conversation._id,
+    });
   } catch (err) {
+    console.error("sendMessage error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/* ✅ Mark all messages in a conversation as read */
+export const markAsRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Message.updateMany(
+      { conversation: id, read: false, sender: { $ne: req.user._id } },
+      { $set: { read: true } }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("markAsRead error:", err);
     res.status(500).json({ message: err.message });
   }
 };

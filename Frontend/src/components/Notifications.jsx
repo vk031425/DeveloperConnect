@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/axiosConfig";
 import { Link } from "react-router-dom";
-import socket from "../socket";
+import { getSocket } from "../socket"; // ✅ use getSocket instead of direct import
 import "../styles/Notifications.css";
 
 const Notifications = () => {
@@ -18,11 +18,11 @@ const Notifications = () => {
     }
   };
 
-  // ✅ Mark as read and refresh
+  // ✅ Mark all as read
   const markAsRead = async () => {
     try {
-      const res = await api.put("/notifications/read");
-      setNotifications(res.data);
+      await api.put("/notifications/read");
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch (err) {
       console.error(err.response?.data || err.message);
     }
@@ -31,12 +31,19 @@ const Notifications = () => {
   useEffect(() => {
     fetchNotifications();
 
-    // ⚡ Listen for real-time notifications
-    socket.on("new-notification", (notif) => {
-      setNotifications((prev) => [notif, ...prev]);
-    });
+    const s = getSocket(); // ✅ safely get current socket instance
+    if (!s) return;
 
-    return () => socket.off("new-notification");
+    const handleNewNotification = (notif) => {
+      setNotifications((prev) => [notif, ...prev]);
+    };
+
+    // ⚡ Listen for real-time notifications
+    s.on("new-notification", handleNewNotification);
+
+    return () => {
+      s.off("new-notification", handleNewNotification);
+    };
   }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -79,6 +86,12 @@ const Notifications = () => {
             <Link to={`/post/${n.post?._id}`} onClick={() => setOpen(false)}>
               post
             </Link>
+          </>
+        );
+      case "message":
+        return (
+          <>
+            {senderLink} sent you a message
           </>
         );
       default:

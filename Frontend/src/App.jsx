@@ -5,7 +5,6 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Feed from "./pages/Feed";
 import Profile from "./pages/Profile";
-import Dashboard from "./pages/Dashboard";
 import Messages from "./pages/Messages";
 import PostDetails from "./pages/PostDetails";
 
@@ -19,7 +18,6 @@ const App =()=>{
         <Route path="/feed" element={<Feed />} />
         <Route path="/profile/:username" element={<Profile />} />
         <Route path="/messages" element={<Messages />} />
-        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/post/:id" element={<PostDetails />} />
       </Routes>
     </>
