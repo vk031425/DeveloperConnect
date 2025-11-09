@@ -22,7 +22,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: true,
+    origin: [process.env.FRONTEND_URLI, process.env.FRONTEND_URLII],
     credentials: true,
   })
 );

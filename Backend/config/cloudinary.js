@@ -8,10 +8,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 console.log("Cloudinary configured");
-console.log(
-  "Cloudinary credentials:",
-  process.env.CLOUDINARY_CLOUD_NAME,
-  process.env.CLOUDINARY_API_KEY ? "Loaded" : "Missing"
-);
+// console.log(
+//   "Cloudinary credentials:",
+//   process.env.CLOUDINARY_CLOUD_NAME,
+//   process.env.CLOUDINARY_API_KEY ? "Loaded" : "Missing"
+// );
 
 export default cloudinary;
