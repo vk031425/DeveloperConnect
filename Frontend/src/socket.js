@@ -16,7 +16,7 @@ export const initSocket = (id) => {
   }
 
   // Create a new socket instance
-  socket = io("http://localhost:5000", {
+  socket = io(`${import.meta.env.VITE_BACKEND_URL}`, {
     withCredentials: true,
     transports: ["websocket"],
     reconnection: true,
