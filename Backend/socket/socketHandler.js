@@ -6,7 +6,7 @@ const onlineUsers = new Map();
 export const initSocket = (server) => {
   io = new Server(server, {
     cors: {
-      origin: process.env.Frontend_URL,
+      origin: process.env.FRONTEND_URL,
       credentials: true,
     },
   });
