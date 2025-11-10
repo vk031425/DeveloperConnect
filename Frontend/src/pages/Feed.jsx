@@ -2,18 +2,19 @@ import { useEffect, useState } from "react";
 import api from "../api/axiosConfig";
 import PostCard from "../components/PostCard";
 import CreatePostForm from "../components/CreatePostForm";
+import { useAuth } from "../context/AuthContext"; // ✅ for current user
 import "../styles/Feed.css";
 
 const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth(); // ✅ logged-in user info
 
   // 🔄 Fetch all posts for the feed
   const fetchFeed = async () => {
     try {
       const res = await api.get("/posts/feed");
-      // Show newest first
-      setPosts(res.data.reverse());
+      setPosts(res.data.reverse()); // newest first
     } catch (err) {
       console.error("Error fetching feed:", err.response?.data || err.message);
     } finally {
@@ -30,19 +31,30 @@ const Feed = () => {
     setPosts((prev) => [newPost, ...prev]);
   };
 
-  // ❤️ Handle like toggle
+  // ❤️ Handle like toggle (frontend + backend sync)
   const handleLikeToggle = (postId, liked, likesCount) => {
     setPosts((prev) =>
-      prev.map((p) =>
-        p._id === postId
-          ? {
-              ...p,
-              likes: liked
-                ? [...p.likes, "you"]
-                : p.likes.filter((id) => id !== "you"),
-            }
-          : p
-      )
+      prev.map((p) => {
+        if (p._id !== postId) return p;
+
+        // ✅ Properly update likes array
+        let updatedLikes;
+        if (liked) {
+          // add this user’s ID if not already in array
+          updatedLikes = p.likes.includes(user._id)
+            ? p.likes
+            : [...p.likes, user._id];
+        } else {
+          // remove this user’s ID
+          updatedLikes = p.likes.filter((id) => id !== user._id);
+        }
+
+        return {
+          ...p,
+          likes: updatedLikes,
+          likesCount: likesCount || updatedLikes.length, // ✅ keep frontend count in sync
+        };
+      })
     );
   };
 

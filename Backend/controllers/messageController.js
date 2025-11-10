@@ -1,6 +1,6 @@
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
-import Notification from "../models/Notification.js";
+import { sendMessageToUser, sendNotification } from "../socket/socketHandler.js";
 
 /* 🧠 Get all conversations for logged-in user */
 export const getConversations = async (req, res) => {
@@ -71,18 +71,25 @@ export const sendMessage = async (req, res) => {
     conversation.lastMessage = message._id;
     await conversation.save();
 
-    // ✅ Avoid sending notification to self
-    if (receiverId.toString() !== req.user._id.toString()) {
-      await Notification.create({
-        recipient: receiverId,
-        sender: req.user._id,
-        type: "message",
-      });
-    }
-
-    // ✅ Populate sender and conversation data for immediate use
+    // ✅ Populate sender & conversation
     await message.populate("sender", "username avatar");
     await conversation.populate("participants", "username avatar name");
+
+    // ✅ Send the message to the receiver instantly
+    sendMessageToUser(receiverId, {
+      ...message.toObject(),
+      conversation: conversation._id,
+    });
+
+    // 🚫 No Notification in DB for message
+    // 🟢 Instead, send a lightweight real-time alert
+    sendNotification(receiverId, {
+      type: "message-alert",
+      sender: req.user,
+      conversation: conversation._id,
+      text: message.text,
+      createdAt: new Date(),
+    });
 
     res.status(201).json({
       ...message.toObject(),

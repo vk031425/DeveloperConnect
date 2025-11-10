@@ -5,37 +5,49 @@ import "../styles/ConversationList.css";
 
 const ConversationList = ({ conversations, userId, onSelect, selectedChat }) => {
   const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const [localConversations, setLocalConversations] = useState(conversations);
+
+  // 🔄 Keep local state in sync if prop changes
+  useEffect(() => {
+    setLocalConversations(conversations);
+  }, [conversations]);
 
   useEffect(() => {
     const s = getSocket();
     if (!s) return;
 
-    // 🟢 Listen for real-time presence updates
-    s.on("user-online", (id) => {
-      setOnlineUsers((prev) => new Set([...prev, id]));
+    // 🟢 Listen for full online list updates (from backend)
+    s.on("online-users", (users) => {
+      setOnlineUsers(new Set(users));
     });
 
-    s.on("user-offline", (id) => {
-      setOnlineUsers((prev) => {
-        const updated = new Set(prev);
-        updated.delete(id);
-        return updated;
-      });
-    });
-
-    // Optional: ask backend who’s online when connecting
+    // ✅ Ask backend for initial online users list
     s.emit("get-online-users");
 
     return () => {
-      s.off("user-online");
-      s.off("user-offline");
+      s.off("online-users");
     };
   }, []);
 
   const handleSelect = async (conv) => {
     try {
-      // ✅ Mark messages in this conversation as read
+      // ✅ Mark messages as read
       await api.put(`/messages/mark-read/${conv._id}`);
+
+      // ✅ Immediately update local state (so bold disappears)
+      setLocalConversations((prev) =>
+        prev.map((c) =>
+          c._id === conv._id
+            ? {
+                ...c,
+                lastMessage: c.lastMessage
+                  ? { ...c.lastMessage, read: true }
+                  : c.lastMessage,
+            }
+            : c
+        )
+      );
+
       onSelect(conv);
     } catch (err) {
       console.error("Error marking messages read:", err);
@@ -47,10 +59,10 @@ const ConversationList = ({ conversations, userId, onSelect, selectedChat }) => 
     <div className="conversation-list">
       <h3 className="chat-title">Chats</h3>
 
-      {conversations.length === 0 ? (
+      {localConversations.length === 0 ? (
         <p className="no-conv">No conversations yet</p>
       ) : (
-        conversations.map((conv) => {
+        localConversations.map((conv) => {
           const partner = conv.participants.find((p) => p._id !== userId);
           const isActive = selectedChat?._id === conv._id;
           const isUnread =

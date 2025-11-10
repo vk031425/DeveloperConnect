@@ -36,19 +36,15 @@ const ChatWindow = ({ conversation, currentUser }) => {
       }
     });
 
-    // 🟢 Presence updates
-    s.on("user-online", (id) => {
-      if (id === partner._id) setIsOnline(true);
-    });
-    s.on("user-offline", (id) => {
-      if (id === partner._id) setIsOnline(false);
+    // 🟢 Full online users update
+    s.on("online-users", (users) => {
+      setIsOnline(users.includes(partner._id));
     });
 
     return () => {
       s.off("receive-message");
       s.off("typing");
-      s.off("user-online");
-      s.off("user-offline");
+      s.off("online-users");
     };
   }, [conversation._id, currentUser._id]);
 

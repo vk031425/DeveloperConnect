@@ -4,6 +4,7 @@ import Notifications from "./Notifications";
 import "./Navbar.css";
 import { useEffect, useState } from "react";
 import api from "../api/axiosConfig";
+import { getSocket } from "../socket";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -25,7 +26,7 @@ const Navbar = () => {
           if (
             conv.lastMessage &&
             !conv.lastMessage.read &&
-            conv.lastMessage.sender !== user._id
+            conv.lastMessage.sender._id !== user._id
           ) {
             total++;
           }
@@ -37,6 +38,20 @@ const Navbar = () => {
     };
     if (user) fetchUnread();
   }, [user]);
+
+  // 🧠 Real-time updates via socket
+  useEffect(() => {
+    const s = getSocket();
+    if (!s) return;
+
+    s.on("new-message-alert", () => {
+      setUnreadCount((prev) => prev + 1);
+    });
+
+    return () => {
+      s.off("new-message-alert");
+    };
+  }, []);
 
   return (
     <nav className="navbar">
@@ -62,7 +77,7 @@ const Navbar = () => {
 
             {/* ✉️ Messages */}
             <li className="nav-msg">
-              <Link to="/messages">✉️</Link>
+              <Link to="/messages" onClick={() => setUnreadCount(0)}>✉️</Link>
               {unreadCount > 0 && (
                 <span className="notif-count">{unreadCount}</span>
               )}

@@ -14,43 +14,58 @@ export const initSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("🔗 User connected:", socket.id);
 
-    // ✅ Register user when logged in
+    // ✅ Register user
     socket.on("register", (userId) => {
       if (!userId) return;
-
-      // Clean duplicates
       for (const [key, value] of onlineUsers.entries()) {
-        if (key === userId || value === socket.id) {
-          onlineUsers.delete(key);
-        }
+        if (key === userId || value === socket.id) onlineUsers.delete(key);
       }
-
       onlineUsers.set(userId.toString(), socket.id);
       console.log("✅ User registered:", userId, "→", socket.id);
-
-      // Broadcast to others
-      io.emit("user-online", userId);
+      io.emit("online-users", Array.from(onlineUsers.keys()));
     });
 
-    // 💬 Handle message delivery
+    // ✉️ Send-message handler + real-time alert
     socket.on("send-message", (data) => {
       const { receiverId, message } = data;
       const receiverSocket = onlineUsers.get(receiverId?.toString());
       if (receiverSocket) {
         io.to(receiverSocket).emit("receive-message", message);
+
+        // 🟢 Emit a separate message-alert event for unread badge
+        io.to(receiverSocket).emit("new-message-alert", {
+          senderId: message.sender?._id,
+          text: message.text,
+          conversation: message.conversation,
+        });
+
         console.log(`📨 Message sent to user ${receiverId}`);
       } else {
         console.log(`⚠️ Receiver ${receiverId} not online`);
       }
     });
 
-    // ✍️ Typing event
+    // ✍️ Typing
     socket.on("typing", ({ receiverId, senderId }) => {
       const receiverSocket = onlineUsers.get(receiverId?.toString());
       if (receiverSocket) io.to(receiverSocket).emit("typing", senderId);
     });
 
-    // ❌ Handle disconnection
+    socket.on("get-online-users", () => {
+      socket.emit("online-users", Array.from(onlineUsers.keys()));
+    });
+
+    socket.on("notifications-read", () => {
+      for (const [userId, sid] of onlineUsers.entries()) {
+        if (sid === socket.id) {
+          io.to(sid).emit("notifications-read");
+          console.log(`📩 Notifications marked as read by ${userId}`);
+          break;
+        }
+      }
+    });
+
+    // ❌ Disconnect
     socket.on("disconnect", () => {
       let disconnectedUser = null;
       for (const [key, value] of onlineUsers.entries()) {
@@ -63,23 +78,28 @@ export const initSocket = (server) => {
       }
 
       if (disconnectedUser) {
-        io.emit("user-offline", disconnectedUser);
+        io.emit("online-users", Array.from(onlineUsers.keys()));
       }
     });
   });
 };
 
-// ✅ Helper to send notifications
+// ✅ Helper to send normal notifications (not for messages)
 export const sendNotification = (userId, notification) => {
   if (!io || !userId) return;
   const socketId = onlineUsers.get(userId.toString());
   if (socketId) {
-    io.to(socketId).emit("new-notification", notification);
-    console.log(`🔔 Notification sent to user ${userId}`);
+    if (notification.type === "message-alert") {
+      io.to(socketId).emit("new-message-alert", notification);
+      console.log(`💬 Message alert sent to user ${userId}`);
+    } else {
+      io.to(socketId).emit("new-notification", notification);
+      console.log(`🔔 Notification sent to user ${userId}`);
+    }
   }
 };
 
-// ✅ Helper to send message delivery
+// ✅ Message delivery helper
 export const sendMessageToUser = (receiverId, message) => {
   if (!io || !receiverId) return;
   const socketId = onlineUsers.get(receiverId.toString());

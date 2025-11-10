@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/axiosConfig";
 import { Link } from "react-router-dom";
-import { getSocket } from "../socket"; // ✅ use getSocket instead of direct import
+import { getSocket } from "../socket";
 import "../styles/Notifications.css";
 
 const Notifications = () => {
@@ -18,11 +18,14 @@ const Notifications = () => {
     }
   };
 
-  // ✅ Mark all as read
+  // ✅ Mark all as read (and notify via socket)
   const markAsRead = async () => {
     try {
       await api.put("/notifications/read");
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+
+      const s = getSocket();
+      if (s) s.emit("notifications-read"); // 🔔 inform backend
     } catch (err) {
       console.error(err.response?.data || err.message);
     }
@@ -31,18 +34,24 @@ const Notifications = () => {
   useEffect(() => {
     fetchNotifications();
 
-    const s = getSocket(); // ✅ safely get current socket instance
+    const s = getSocket();
     if (!s) return;
 
     const handleNewNotification = (notif) => {
       setNotifications((prev) => [notif, ...prev]);
     };
 
-    // ⚡ Listen for real-time notifications
+    const handleNotificationsRead = () => {
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    };
+
+    // ⚡ Listen for real-time updates
     s.on("new-notification", handleNewNotification);
+    s.on("notifications-read", handleNotificationsRead);
 
     return () => {
       s.off("new-notification", handleNewNotification);
+      s.off("notifications-read", handleNotificationsRead);
     };
   }, []);
 
@@ -65,11 +74,7 @@ const Notifications = () => {
 
     switch (n.type) {
       case "follow":
-        return (
-          <>
-            {senderLink} started following you
-          </>
-        );
+        return <>{senderLink} started following you</>;
       case "like":
         return (
           <>
@@ -89,11 +94,7 @@ const Notifications = () => {
           </>
         );
       case "message":
-        return (
-          <>
-            {senderLink} sent you a message
-          </>
-        );
+        return <>{senderLink} sent you a message</>;
       default:
         return "New activity";
     }
@@ -104,9 +105,7 @@ const Notifications = () => {
       {/* 🔔 Bell icon */}
       <button className="notif-bell" onClick={toggleOpen}>
         🔔{" "}
-        {unreadCount > 0 && (
-          <span className="notif-count">{unreadCount}</span>
-        )}
+        {unreadCount > 0 && <span className="notif-count">{unreadCount}</span>}
       </button>
 
       {/* 📬 Dropdown */}
