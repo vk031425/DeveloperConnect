@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axiosConfig";
 import "../styles/PostCard.css";
+import { useAuth } from "../context/AuthContext"; 
 
 const PostCard = ({ post, onLikeToggle, onCommentAdded }) => {
+  const { user } = useAuth();
   const [commentText, setCommentText] = useState("");
   const [loading, setLoading] = useState(false);
   const [liked, setLiked] = useState(
-    post.likes?.some((l) => l === "you") || false
+    post.likes?.some((l) => l === user?.id) || false
   );
 
   // ❤️ Like handler
