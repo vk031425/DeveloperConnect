@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import api from "../api/axiosConfig";
 import { getSocket } from "../socket";
 import MessageInput from "./MessageInput";
@@ -8,109 +8,123 @@ const ChatWindow = ({ conversation, currentUser }) => {
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
+
   const partner = conversation.participants.find(
     (p) => p._id !== currentUser._id
   );
+
   const messagesEndRef = useRef(null);
+  const socketRef = getSocket();
 
-  useEffect(() => {
-    fetchMessages();
-
-    const s = getSocket();
-    if (!s) return console.warn("⚠️ Socket not initialized yet");
-
-    // 🧠 Listen for new messages
-    s.on("receive-message", (message) => {
+  // 💬 stable message handler
+  const handleIncomingMessage = useCallback(
+    (message) => {
       if (message.conversation === conversation._id) {
         if (message.sender._id !== currentUser._id) {
           setMessages((prev) => [...prev, message]);
         }
       }
-    });
+    },
+    [conversation._id, currentUser._id]
+  );
 
-    // 💬 Listen for typing indicator
-    s.on("typing", (senderId) => {
+  // ✍️ stable typing handler
+  const handleTypingEvent = useCallback(
+    (senderId) => {
       if (senderId === partner._id) {
         setIsTyping(true);
         setTimeout(() => setIsTyping(false), 2000);
       }
-    });
+    },
+    [partner._id]
+  );
 
-    // 🟢 Full online users update
-    s.on("online-users", (users) => {
+  // 🟢 stable online-users handler
+  const handleOnlineUsers = useCallback(
+    (users) => {
       setIsOnline(users.includes(partner._id));
-    });
+    },
+    [partner._id]
+  );
+
+  // 🧠 Attach listeners ONCE per conversation change
+  useEffect(() => {
+    if (!socketRef) return;
+
+    socketRef.on("receive-message", handleIncomingMessage);
+    socketRef.on("typing", handleTypingEvent);
+    socketRef.on("online-users", handleOnlineUsers);
 
     return () => {
-      s.off("receive-message");
-      s.off("typing");
-      s.off("online-users");
+      socketRef.off("receive-message", handleIncomingMessage);
+      socketRef.off("typing", handleTypingEvent);
+      socketRef.off("online-users", handleOnlineUsers);
     };
-  }, [conversation._id, currentUser._id]);
+  }, [socketRef, handleIncomingMessage, handleTypingEvent, handleOnlineUsers]);
 
+  // 🔄 Fetch messages
   const fetchMessages = async () => {
     try {
       const res = await api.get(`/messages/conversations/${conversation._id}`);
       setMessages(res.data);
-
-      // ✅ Immediately mark them as read
       await api.put(`/messages/mark-read/${conversation._id}`);
     } catch (err) {
-      console.error(
-        "Error fetching messages:",
-        err.response?.data || err.message
-      );
+      console.error("Fetch error:", err);
     }
   };
 
+  useEffect(() => {
+    fetchMessages();
+  }, [conversation._id]);
+
+  // ➤ Send
   const handleSend = async (text) => {
     if (!text.trim()) return;
+
     try {
       const res = await api.post("/messages/send", {
         receiverId: partner._id,
         text,
       });
 
-      // Add locally for instant feedback
       setMessages((prev) => [...prev, res.data]);
 
-      // Emit message through socket
-      const s = getSocket();
-      if (s) {
-        s.emit("send-message", {
+      if (socketRef) {
+        socketRef.emit("send-message", {
           receiverId: partner._id,
           message: res.data,
         });
       }
     } catch (err) {
-      console.error(
-        "Error sending message:",
-        err.response?.data || err.message
-      );
+      console.error("Send error:", err);
     }
   };
 
   const handleTyping = () => {
-    const s = getSocket();
-    if (s)
-      s.emit("typing", { receiverId: partner._id, senderId: currentUser._id });
+    if (socketRef)
+      socketRef.emit("typing", {
+        receiverId: partner._id,
+        senderId: currentUser._id,
+      });
   };
 
-  // Auto-scroll on new message
+  // Smooth scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
 
   return (
     <div className="chat-window">
       <div className="chat-header">
         <img
-          src={partner?.avatar || "https://via.placeholder.com/40"}
+          src={partner.avatar || "https://via.placeholder.com/40"}
           alt="avatar"
           className="conv-avatar"
         />
         <div>
-          <h3>@{partner?.username}</h3>
+          <h3>@{partner.username}</h3>
+
           {isTyping ? (
             <p className="typing-status">typing...</p>
           ) : (
