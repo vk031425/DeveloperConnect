@@ -1,6 +1,6 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import api from "../api/axiosConfig";
-import { initSocket, disconnectSocket, getSocket } from "../socket";
+import { initSocket, disconnectSocket } from "../socket";
 
 const AuthContext = createContext();
 
@@ -27,21 +27,9 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
-    // Start socket connection
+    // Start socket connection — this itself registers user
     initSocket(user._id);
 
-    const s = getSocket();
-    if (!s) return;
-
-    // ❗ Register user ONLY once per socket connection
-    s.once("connect", () => {
-      console.log("🔌 Socket connected. Registering user:", user._id);
-      s.emit("register", user._id);
-    });
-
-    return () => {
-      s.off("connect");
-    };
   }, [user?._id]);
 
   const logout = async () => {
