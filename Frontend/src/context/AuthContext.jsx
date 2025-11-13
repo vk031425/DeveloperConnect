@@ -1,12 +1,13 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import api from "../api/axiosConfig";
-import { initSocket, disconnectSocket, getSocket } from "../socket"; // ✅ added getSocket
+import { initSocket, disconnectSocket, getSocket } from "../socket";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
+  // 🔍 Check login status on first load
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -19,16 +20,29 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, []);
 
-  // ✅ Handle socket connection whenever user changes
+  // ⚡ Initialize socket ONLY ONCE per login
   useEffect(() => {
-    if (user?._id) {
-      initSocket(user._id);
-      const s = getSocket();
-      if (s) s.emit("register", user._id); // register immediately
-    } else {
+    if (!user?._id) {
       disconnectSocket();
+      return;
     }
-  }, [user]);
+
+    // Start socket connection
+    initSocket(user._id);
+
+    const s = getSocket();
+    if (!s) return;
+
+    // ❗ Register user ONLY once per socket connection
+    s.once("connect", () => {
+      console.log("🔌 Socket connected. Registering user:", user._id);
+      s.emit("register", user._id);
+    });
+
+    return () => {
+      s.off("connect");
+    };
+  }, [user?._id]);
 
   const logout = async () => {
     await api.post("/auth/logout");

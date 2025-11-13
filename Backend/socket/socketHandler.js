@@ -14,25 +14,39 @@ export const initSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("🔗 User connected:", socket.id);
 
-    // ✅ Register user
+    // ✅ Safe Register (NO duplicates)
     socket.on("register", (userId) => {
       if (!userId) return;
-      for (const [key, value] of onlineUsers.entries()) {
-        if (key === userId || value === socket.id) onlineUsers.delete(key);
+
+      const uid = userId.toString();
+
+      // 🛡 If already registered to this socket → do NOTHING
+      if (onlineUsers.get(uid) === socket.id) {
+        console.log(`⚠️ Ignored duplicate register for ${uid}`);
+        return;
       }
-      onlineUsers.set(userId.toString(), socket.id);
-      console.log("✅ User registered:", userId, "→", socket.id);
+
+      // 🧹 Clean previous stale mapping
+      for (const [key, value] of onlineUsers.entries()) {
+        if (key === uid || value === socket.id) {
+          onlineUsers.delete(key);
+        }
+      }
+
+      onlineUsers.set(uid, socket.id);
+      console.log("✅ User registered:", uid, "→", socket.id);
+
       io.emit("online-users", Array.from(onlineUsers.keys()));
     });
 
-    // ✉️ Send-message handler + real-time alert
+    // 📩 Message + message-alert
     socket.on("send-message", (data) => {
       const { receiverId, message } = data;
       const receiverSocket = onlineUsers.get(receiverId?.toString());
+
       if (receiverSocket) {
         io.to(receiverSocket).emit("receive-message", message);
 
-        // 🟢 Emit a separate message-alert event for unread badge
         io.to(receiverSocket).emit("new-message-alert", {
           senderId: message.sender?._id,
           text: message.text,
@@ -41,33 +55,34 @@ export const initSocket = (server) => {
 
         console.log(`📨 Message sent to user ${receiverId}`);
       } else {
-        console.log(`⚠️ Receiver ${receiverId} not online`);
+        console.log(`⚠️ Receiver ${receiverId} offline`);
       }
     });
 
-    // ✍️ Typing
     socket.on("typing", ({ receiverId, senderId }) => {
       const receiverSocket = onlineUsers.get(receiverId?.toString());
       if (receiverSocket) io.to(receiverSocket).emit("typing", senderId);
     });
 
+    // Send online users list when someone asks
     socket.on("get-online-users", () => {
       socket.emit("online-users", Array.from(onlineUsers.keys()));
     });
 
+    // Sync notifications read state
     socket.on("notifications-read", () => {
       for (const [userId, sid] of onlineUsers.entries()) {
         if (sid === socket.id) {
           io.to(sid).emit("notifications-read");
-          console.log(`📩 Notifications marked as read by ${userId}`);
           break;
         }
       }
     });
 
-    // ❌ Disconnect
+    // ❌ Disconnected
     socket.on("disconnect", () => {
       let disconnectedUser = null;
+
       for (const [key, value] of onlineUsers.entries()) {
         if (value === socket.id) {
           disconnectedUser = key;
@@ -84,27 +99,22 @@ export const initSocket = (server) => {
   });
 };
 
-// ✅ Helper to send normal notifications (not for messages)
 export const sendNotification = (userId, notification) => {
   if (!io || !userId) return;
   const socketId = onlineUsers.get(userId.toString());
   if (socketId) {
     if (notification.type === "message-alert") {
       io.to(socketId).emit("new-message-alert", notification);
-      console.log(`💬 Message alert sent to user ${userId}`);
     } else {
       io.to(socketId).emit("new-notification", notification);
-      console.log(`🔔 Notification sent to user ${userId}`);
     }
   }
 };
 
-// ✅ Message delivery helper
 export const sendMessageToUser = (receiverId, message) => {
   if (!io || !receiverId) return;
   const socketId = onlineUsers.get(receiverId.toString());
   if (socketId) {
     io.to(socketId).emit("receive-message", message);
-    console.log(`💬 Delivered message to user ${receiverId}`);
   }
 };
