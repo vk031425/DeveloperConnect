@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import api from "../api/axiosConfig";
 import { getSocket } from "../socket";
 import MessageInput from "./MessageInput";
@@ -14,117 +14,94 @@ const ChatWindow = ({ conversation, currentUser }) => {
   );
 
   const messagesEndRef = useRef(null);
-  const socketRef = getSocket();
+  const socketRef = useRef(null);
 
-  // 💬 stable message handler
-  const handleIncomingMessage = useCallback(
-    (message) => {
-      if (message.conversation === conversation._id) {
-        if (message.sender._id !== currentUser._id) {
-          setMessages((prev) => [...prev, message]);
-        }
-      }
-    },
-    [conversation._id, currentUser._id]
-  );
-
-  // ✍️ stable typing handler
-  const handleTypingEvent = useCallback(
-    (senderId) => {
-      if (senderId === partner._id) {
-        setIsTyping(true);
-        setTimeout(() => setIsTyping(false), 2000);
-      }
-    },
-    [partner._id]
-  );
-
-  // 🟢 stable online-users handler
-  const handleOnlineUsers = useCallback(
-    (users) => {
-      setIsOnline(users.includes(partner._id));
-    },
-    [partner._id]
-  );
-
-  // 🧠 Attach listeners ONCE per conversation change
   useEffect(() => {
-    if (!socketRef) return;
+    socketRef.current = getSocket();
+    const s = socketRef.current;
+    if (!s) return;
 
-    socketRef.on("receive-message", handleIncomingMessage);
-    socketRef.on("typing", handleTypingEvent);
-    socketRef.on("online-users", handleOnlineUsers);
-
-    return () => {
-      socketRef.off("receive-message", handleIncomingMessage);
-      socketRef.off("typing", handleTypingEvent);
-      socketRef.off("online-users", handleOnlineUsers);
+    // --- STABLE HANDLERS ---
+    const onReceive = (message) => {
+      if (message.conversation !== conversation._id) return;
+      if (message.sender._id === currentUser._id) return;
+      setMessages((prev) => [...prev, message]);
     };
-  }, [socketRef, handleIncomingMessage, handleTypingEvent, handleOnlineUsers]);
 
-  // 🔄 Fetch messages
-  const fetchMessages = async () => {
-    try {
+    const onTyping = (senderId) => {
+      if (senderId !== partner._id) return;
+      setIsTyping(true);
+      setTimeout(() => setIsTyping(false), 2000);
+    };
+
+    const onOnlineUsers = (users) => {
+      setIsOnline(users.includes(partner._id));
+    };
+
+    // --- ATTACH LISTENERS ---
+    s.on("receive-message", onReceive);
+    s.on("typing", onTyping);
+    s.on("online-users", onOnlineUsers);
+
+    // --- REMOVE ON UNMOUNT ---
+    return () => {
+      s.off("receive-message", onReceive);
+      s.off("typing", onTyping);
+      s.off("online-users", onOnlineUsers);
+    };
+  }, [conversation._id, partner._id, currentUser._id]);
+
+  // Load messages
+  useEffect(() => {
+    const load = async () => {
       const res = await api.get(`/messages/conversations/${conversation._id}`);
       setMessages(res.data);
       await api.put(`/messages/mark-read/${conversation._id}`);
-    } catch (err) {
-      console.error("Fetch error:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchMessages();
+    };
+    load();
   }, [conversation._id]);
 
-  // ➤ Send
   const handleSend = async (text) => {
-    if (!text.trim()) return;
+    const s = socketRef.current;
+    if (!s) return;
 
-    try {
-      const res = await api.post("/messages/send", {
-        receiverId: partner._id,
-        text,
-      });
+    const res = await api.post("/messages/send", {
+      receiverId: partner._id,
+      text,
+    });
 
-      setMessages((prev) => [...prev, res.data]);
+    setMessages((prev) => [...prev, res.data]);
 
-      if (socketRef) {
-        socketRef.emit("send-message", {
-          receiverId: partner._id,
-          message: res.data,
-        });
-      }
-    } catch (err) {
-      console.error("Send error:", err);
-    }
+    s.emit("send-message", {
+      receiverId: partner._id,
+      message: res.data,
+    });
   };
 
   const handleTyping = () => {
-    if (socketRef)
-      socketRef.emit("typing", {
-        receiverId: partner._id,
-        senderId: currentUser._id,
-      });
+    const s = socketRef.current;
+    if (!s) return;
+
+    s.emit("typing", {
+      receiverId: partner._id,
+      senderId: currentUser._id,
+    });
   };
 
-  // Smooth scroll
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
 
   return (
     <div className="chat-window">
       <div className="chat-header">
         <img
           src={partner.avatar || "https://via.placeholder.com/40"}
-          alt="avatar"
           className="conv-avatar"
         />
         <div>
           <h3>@{partner.username}</h3>
-
           {isTyping ? (
             <p className="typing-status">typing...</p>
           ) : (
@@ -154,7 +131,7 @@ const ChatWindow = ({ conversation, currentUser }) => {
             </div>
           </div>
         ))}
-        <div ref={messagesEndRef}></div>
+        <div ref={messagesEndRef} />
       </div>
 
       <MessageInput onSend={handleSend} onTyping={handleTyping} />
