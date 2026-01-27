@@ -60,7 +60,7 @@ const Profile = () => {
     try {
       await api.post("/messages/send", {
         receiverId: userData._id,
-        text: "👋 Hey!",
+        text: "Hey!",
       });
       navigate("/messages", { state: { openChatWith: userData } });
     } catch (err) {
