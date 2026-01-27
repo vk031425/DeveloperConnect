@@ -7,7 +7,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  // 🔍 Check login status on first load
+  //Check login status on first load
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, []);
 
-  // ⚡ Initialize socket ONLY ONCE per login
+  //Initialize socket ONLY ONCE per login
   useEffect(() => {
     if (!user?._id) {
       disconnectSocket();
