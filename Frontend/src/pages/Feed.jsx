@@ -8,7 +8,7 @@ import "../styles/Feed.css";
 const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth(); // ✅ get current user
+  const { user } = useAuth(); //get current user
 
   useEffect(() => {
     const fetchFeed = async () => {

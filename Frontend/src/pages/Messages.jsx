@@ -4,7 +4,7 @@ import api from "../api/axiosConfig";
 import { useAuth } from "../context/AuthContext";
 import ConversationList from "../components/ConversationList";
 import ChatWindow from "../components/ChatWindow";
-import { getSocket } from "../socket"; // ✅ Use getSocket instead of direct import
+import { getSocket } from "../socket"; //Use getSocket instead of direct import
 import "../styles/Messages.css";
 
 const Messages = () => {
@@ -16,7 +16,7 @@ const Messages = () => {
   useEffect(() => {
     if (!user) return;
 
-    const s = getSocket(); // ✅ safely get active socket instance
+    const s = getSocket(); //safely get active socket instance
     if (s) {
       s.emit("register", user._id);
     } else {
@@ -70,7 +70,7 @@ const Messages = () => {
           <ChatWindow conversation={selectedChat} currentUser={user} />
         ) : (
           <div className="no-chat">
-            <p>Select a conversation to start chatting 💬</p>
+            <p>Select a conversation to start chatting</p>
           </div>
         )}
       </div>
