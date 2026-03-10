@@ -8,23 +8,23 @@ import { getSocket } from "../socket"; //Use getSocket instead of direct import
 import "../styles/Messages.css";
 
 const Messages = () => {
-  const { user } = useAuth();
+  const { authData } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const location = useLocation();
 
   useEffect(() => {
-    if (!user) return;
+    if (!authData) return;
 
     const s = getSocket(); //safely get active socket instance
     if (s) {
-      s.emit("register", user._id);
+      s.emit("register", authData._id);
     } else {
       console.warn("Socket not initialized yet.");
     }
 
     fetchConversations();
-  }, [user]);
+  }, [authData]);
 
   const fetchConversations = async () => {
     try {
@@ -33,9 +33,9 @@ const Messages = () => {
 
       // 👇 Auto-open chat if redirected from profile with openChatWith
       if (location.state?.openChatWith) {
-        const targetUser = location.state.openChatWith;
+        const targetauthData = location.state.openChatWith;
         const existingChat = res.data.find((c) =>
-          c.participants.some((p) => p._id === targetUser._id)
+          c.participants.some((p) => p._id === targetauthData._id)
         );
 
         if (existingChat) {
@@ -44,7 +44,7 @@ const Messages = () => {
           // if no existing chat, prepare temporary chat (will create on first message)
           setSelectedChat({
             _id: null,
-            participants: [user, targetUser],
+            participants: [authData, targetauthData],
             messages: [],
           });
         }
@@ -62,12 +62,12 @@ const Messages = () => {
       <div className="messages-container">
         <ConversationList
           conversations={conversations}
-          userId={user?._id}
+          authDataId={authData?._id}
           onSelect={setSelectedChat}
           selectedChat={selectedChat}
         />
         {selectedChat ? (
-          <ChatWindow conversation={selectedChat} currentUser={user} />
+          <ChatWindow conversation={selectedChat} currentauthData={authData} />
         ) : (
           <div className="no-chat">
             <p>Select a conversation to start chatting</p>

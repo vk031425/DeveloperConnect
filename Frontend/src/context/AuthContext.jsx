@@ -5,41 +5,47 @@ import { initSocket, disconnectSocket } from "../socket";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [authData, setAuthData] = useState({
+    user: null,
+    isLoggedIn: false,
+    loading: true, // important for refresh handling
+  });
 
-  //Check login status on first load
+  // Check authentication on app load / refresh
   useEffect(() => {
-    const fetchUser = async () => {
+    const checkAuth = async () => {
       try {
-        const res = await api.get("/auth/me");
-        setUser(res.data);
-      } catch {
-        setUser(null);
+        const res = await api.get("/auth/verify");
+        setAuthData({
+          user: res.data,
+          isLoggedIn: true,
+          loading: false,
+        });
+      } catch (error) {
+        // Token invalid / expired / not logged in
+        setAuthData({
+          user: null,
+          isLoggedIn: false,
+          loading: false,
+        });
       }
     };
-    fetchUser();
+
+    checkAuth();
   }, []);
 
   //Initialize socket ONLY ONCE per login
   useEffect(() => {
-    if (!user?._id) {
+    if (!authData?.user?._id) {
       disconnectSocket();
       return;
     }
-
     // Start socket connection — this itself registers user
-    initSocket(user._id);
-
-  }, [user?._id]);
-
-  const logout = async () => {
-    await api.post("/auth/logout");
-    setUser(null);
-    disconnectSocket();
-  };
+    initSocket(authData.user._id);
+  }, [authData?.user?._id]);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, logout }}>
+    <AuthContext.Provider value={{ authData, setAuthData}}>
       {children}
     </AuthContext.Provider>
   );

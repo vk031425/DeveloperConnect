@@ -7,7 +7,7 @@ const Dashboard = () => {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [message, setMessage] = useState("");
-  const { user } = useAuth();
+  const { authData } = useAuth();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -35,7 +35,7 @@ const Dashboard = () => {
       const res = await api.put("/profile", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setProfile(res.data.user);
+      setProfile(res.data.authData);
       setEditing(false);
       setMessage("Profile updated successfully!");
     } catch (err) {
@@ -43,7 +43,7 @@ const Dashboard = () => {
     }
   };
 
-  if (!user) return <p>Please login to access dashboard.</p>;
+  if (!authData) return <p>Please login to access dashboard.</p>;
   if (!profile) return <p>Loading profile...</p>;
 
   return (

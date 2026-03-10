@@ -8,7 +8,7 @@ import "../styles/Feed.css";
 const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth(); //get current user
+  const { authData } = useAuth(); //get current authData
 
   useEffect(() => {
     const fetchFeed = async () => {
@@ -33,8 +33,8 @@ const Feed = () => {
           ? {
               ...p,
               likes: liked
-                ? [...p.likes, user._id]
-                : p.likes.filter((id) => id !== user._id),
+                ? [...p.likes, authData._id]
+                : p.likes.filter((id) => id !== authData._id),
             }
           : p
       )
@@ -67,7 +67,7 @@ const Feed = () => {
             <PostCard
               key={post._id}
               post={post}
-              currentUser={user} // ✅ pass here
+              currentauthData={authData} // ✅ pass here
               onLikeToggle={handleLikeToggle}
               onCommentAdded={handleCommentAdded}
             />
