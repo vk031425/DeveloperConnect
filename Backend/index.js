@@ -5,6 +5,8 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import http from "http";
 import cookieParser from "cookie-parser";
+
+
 // Routes
 import authRoutes from "./routes/authRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
@@ -22,7 +24,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: [process.env.FRONTEND_URLI, process.env.FRONTEND_URLII],
+    origin: [process.env.FRONTEND_URLI, process.env.FRONTEND_URLII , process.env.FRONTEND_URLIII],
     credentials: true,
   })
 );

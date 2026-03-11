@@ -5,14 +5,14 @@ import {
   updateProfile,
   toggleFollow,
 } from "../controllers/profileController.js";
-import { protect } from "../middlewares/authMiddleware.js";
+import { verifyuser } from "../middlewares/verifyuser.js";
 import upload from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
-router.get("/me", protect, getMyProfile);
-router.get("/:username", protect, getProfileByUsername);
-router.put("/", protect, upload.single("avatar"), updateProfile);
-router.post("/:username/follow", protect, toggleFollow);
+router.get("/me", verifyuser, getMyProfile);
+router.get("/:username", verifyuser, getProfileByUsername);
+router.put("/", verifyuser, upload.single("avatar"), updateProfile);
+router.post("/:username/follow", verifyuser, toggleFollow);
 
 export default router;

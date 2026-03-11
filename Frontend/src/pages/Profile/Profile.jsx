@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import api from "../api/axiosConfig";
-import PostCard from "../components/PostCard";
-import { useAuth } from "../context/AuthContext";
-import "../styles/Profile.css";
+import api from "../../api/axiosConfig";
+import PostCard from "../../components/PostCard";
+import { useAuth } from "../../context/AuthContext";
+import "./Profile.css";
 
 const Profile = () => {
   const { username } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { authData } = useAuth();
 
-  const [userData, setUserData] = useState(null);
+  const [userData, setuserData] = useState(null);
   const [posts, setPosts] = useState([]);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -28,7 +28,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const res = await api.get(`/profile/${username}`);
-        setUserData(res.data.user);
+        setuserData(res.data.user);
         setPosts(res.data.posts);
         setIsOwnProfile(res.data.isOwnProfile);
         setIsFollowing(res.data.isFollowing);
@@ -47,7 +47,7 @@ const Profile = () => {
     try {
       const res = await api.post(`/profile/${username}/follow`);
       setIsFollowing(res.data.isFollowing);
-      setUserData((prev) => ({
+      setuserData((prev) => ({
         ...prev,
         followersCount: res.data.followersCount,
       }));
@@ -59,10 +59,10 @@ const Profile = () => {
   const handleMessage = async () => {
     try {
       await api.post("/messages/send", {
-        receiverId: userData._id,
-        text: "👋 Hey!",
+        receiverId: authData.user._id,
+        text: "Hey!",
       });
-      navigate("/messages", { state: { openChatWith: userData } });
+      navigate("/messages", { state: { openChatWith: authData } });
     } catch (err) {
       console.error(
         "Error starting message:",
@@ -92,7 +92,7 @@ const Profile = () => {
       const res = await api.put("/profile", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setUserData(res.data.user);
+      setuserData(res.data.authData);
       setEditing(false);
       setMessage("Profile updated successfully!");
     } catch (err) {
@@ -103,7 +103,7 @@ const Profile = () => {
   const handleRemoveFollow = async (targetId, type) => {
     try {
       const res = await api.post(`/profile/remove-${type}`, { targetId });
-      setUserData(res.data.user);
+      setuserData(res.data.user);
     } catch (err) {
       console.error(
         "Error removing follow:",
@@ -133,7 +133,7 @@ const Profile = () => {
           <div className="profile-avatar">
             <div className="avatar-wrapper">
               <img
-                src={avatarPreview || "https://via.placeholder.com/120"}
+                src={avatarPreview || "/placeholder.jpg"}
                 alt="avatar"
                 className="avatar-img"
               />

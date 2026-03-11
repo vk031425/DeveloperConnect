@@ -1,11 +1,11 @@
 import React from "react";
 import {Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Navbar from "./components/Navbar/Navbar";
+import Login from "./pages/Login/Login";
+import Register from "./pages/Register/Register";
 import Feed from "./pages/Feed";
-import Profile from "./pages/Profile";
-import Messages from "./pages/Messages";
+import Profile from "./pages/Profile/Profile";
+import Messages from "./pages/Messages/Messages";
 import PostDetails from "./pages/PostDetails";
 
 const App =()=>{
