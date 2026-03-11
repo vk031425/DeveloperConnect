@@ -1,0 +1,183 @@
+import { useEffect, useState, useRef } from "react";
+import api from "../../api/axiosConfig";
+import { useSocket } from "../../context/SocketContext";
+import MessageInput from "../MessageInput";
+import "./ChatWindow.css";
+
+const ChatWindow = ({ conversation, currentUser }) => {
+  const socket = useSocket();
+
+  const [messages, setMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [isOnline, setIsOnline] = useState(false);
+
+  const messagesEndRef = useRef(null);
+
+  const partner = conversation?.participants?.find(
+    (p) => p._id !== currentUser?._id
+  );
+
+  // Reset messages when switching conversations
+  useEffect(() => {
+    setMessages([]);
+  }, [conversation?._id]);
+
+  // Load messages
+  useEffect(() => {
+    const loadMessages = async () => {
+      try {
+        const res = await api.get(
+          `/messages/conversations/${conversation._id}`
+        );
+
+        setMessages(res.data);
+
+        await api.put(`/messages/mark-read/${conversation._id}`);
+      } catch (err) {
+        console.error("Error loading messages:", err);
+      }
+    };
+
+    if (conversation?._id) {
+      loadMessages();
+    }
+  }, [conversation?._id]);
+
+  // Socket listeners
+  useEffect(() => {
+    if (!socket || !conversation?._id || !partner?._id) return;
+
+    const handleReceiveMessage = (message) => {
+
+      // Ignore other conversations
+      if (message.conversation !== conversation._id) return;
+
+      // Ignore own messages
+      if (message.sender._id === currentUser._id) return;
+
+      // Prevent duplicates
+      setMessages((prev) => {
+        const exists = prev.some((m) => m._id === message._id);
+        if (exists) return prev;
+        return [...prev, message];
+      });
+    };
+
+    const handleTyping = (senderId) => {
+      if (senderId !== partner._id) return;
+
+      setIsTyping(true);
+      setTimeout(() => setIsTyping(false), 2000);
+    };
+
+    const handleOnlineUsers = (users) => {
+      setIsOnline(users.includes(partner._id));
+    };
+
+    socket.on("receive-message", handleReceiveMessage);
+    socket.on("typing", handleTyping);
+    socket.on("online-users", handleOnlineUsers);
+
+    return () => {
+      socket.off("receive-message", handleReceiveMessage);
+      socket.off("typing", handleTyping);
+      socket.off("online-users", handleOnlineUsers);
+    };
+
+  }, [socket, conversation?._id, partner?._id, currentUser?._id]);
+
+  const handleSend = async (text) => {
+    if (!text.trim()) return;
+
+    try {
+      const res = await api.post("/messages/send", {
+        receiverId: partner._id,
+        text,
+      });
+
+      // Prevent duplicates
+      setMessages((prev) => {
+        const exists = prev.some((m) => m._id === res.data._id);
+        if (exists) return prev;
+        return [...prev, res.data];
+      });
+
+    } catch (err) {
+      console.error("Error sending message:", err);
+    }
+  };
+
+  const handleTyping = () => {
+    if (!socket || !partner?._id) return;
+
+    socket.emit("typing", {
+      receiverId: partner._id,
+      senderId: currentUser._id,
+    });
+  };
+
+  // Auto-scroll to latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  if (!conversation || !partner) {
+    return <div className="chat-window">Loading chat...</div>;
+  }
+
+  return (
+    <div className="chat-window">
+
+      <div className="chat-header">
+        <img
+          src={partner.avatar || "https://via.placeholder.com/40"}
+          alt="avatar"
+          className="conv-avatar"
+        />
+
+        <div>
+          <h3>@{partner.username}</h3>
+
+          {isTyping ? (
+            <p className="typing-status">typing...</p>
+          ) : (
+            <p className={`status-text ${isOnline ? "online" : "offline"}`}>
+              {isOnline ? "Online" : "Offline"}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="chat-messages">
+
+        {messages.map((msg) => (
+          <div
+            key={msg._id}
+            className={`message ${
+              msg.sender._id === currentUser._id ? "sent" : "received"
+            }`}
+          >
+            <div className="message-bubble">
+              {msg.text}
+
+              <span className="timestamp">
+                {new Date(msg.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+          </div>
+        ))}
+
+        <div ref={messagesEndRef} />
+
+      </div>
+
+      <MessageInput onSend={handleSend} onTyping={handleTyping} />
+
+    </div>
+  );
+};
+
+export default ChatWindow;

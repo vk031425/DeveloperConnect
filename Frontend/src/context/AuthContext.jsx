@@ -33,17 +33,7 @@ export const AuthProvider = ({ children }) => {
 
     checkAuth();
   }, []);
-
-  //Initialize socket ONLY ONCE per login
-  useEffect(() => {
-    if (!authData?.user?._id) {
-      disconnectSocket();
-      return;
-    }
-    // Start socket connection — this itself registers user
-    initSocket(authData.user._id);
-  }, [authData?.user?._id]);
-
+  
   return (
     <AuthContext.Provider value={{ authData, setAuthData}}>
       {children}

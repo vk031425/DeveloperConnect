@@ -4,7 +4,8 @@ import {
   getConversations,
   getMessages,
   sendMessage,
-  markAsRead, // ✅ new controller
+  markAsRead,
+  markInboxSeen
 } from "../controllers/messageController.js";
 
 const router = express.Router();
@@ -12,6 +13,7 @@ const router = express.Router();
 router.get("/conversations", verifyuser, getConversations);
 router.get("/conversations/:id", verifyuser, getMessages);
 router.post("/send", verifyuser, sendMessage);
-router.put("/mark-read/:id", verifyuser, markAsRead); // ✅ new route
+router.put("/mark-read/:id", verifyuser, markAsRead);
+router.post("/mark-inbox-seen",verifyuser, markInboxSeen);
 
 export default router;

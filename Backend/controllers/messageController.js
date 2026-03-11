@@ -1,6 +1,10 @@
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
-import { sendMessageToUser, sendNotification } from "../socket/socketHandler.js";
+import {
+  sendMessageToUser,
+  sendNotification,
+} from "../socket/socketHandler.js";
+import User from "../models/User.js";
 
 /* 🧠 Get all conversations for logged-in user */
 export const getConversations = async (req, res) => {
@@ -31,8 +35,12 @@ export const getMessages = async (req, res) => {
 
     // ✅ Auto-mark messages as read when fetching
     await Message.updateMany(
-      { conversation: req.params.id, read: false, sender: { $ne: req.user._id } },
-      { $set: { read: true } }
+      {
+        conversation: req.params.id,
+        read: false,
+        sender: { $ne: req.user._id },
+      },
+      { $set: { read: true } },
     );
 
     res.json(messages);
@@ -107,11 +115,24 @@ export const markAsRead = async (req, res) => {
     const { id } = req.params;
     await Message.updateMany(
       { conversation: id, read: false, sender: { $ne: req.user._id } },
-      { $set: { read: true } }
+      { $set: { read: true } },
     );
     res.json({ success: true });
   } catch (err) {
     console.error("markAsRead error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const markInboxSeen = async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.user._id, {
+      lastMessageSeenAt: new Date(),
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("markInboxSeen error:", err);
     res.status(500).json({ message: err.message });
   }
 };

@@ -133,7 +133,7 @@ const Profile = () => {
           <div className="profile-avatar">
             <div className="avatar-wrapper">
               <img
-                src={avatarPreview || "https://via.placeholder.com/120"}
+                src={avatarPreview || "/placeholder.jpg"}
                 alt="avatar"
                 className="avatar-img"
               />
