@@ -48,13 +48,9 @@ const ChatWindow = ({ conversation, currentUser }) => {
     if (!socket || !conversation?._id || !partner?._id) return;
 
     const handleReceiveMessage = (message) => {
-      // Ignore other conversations
       if (message.conversation !== conversation._id) return;
-
-      // Ignore own messages
       if (message.sender._id === currentUser._id) return;
 
-      // Prevent duplicates
       setMessages((prev) => {
         const exists = prev.some((m) => m._id === message._id);
         if (exists) return prev;
@@ -76,6 +72,9 @@ const ChatWindow = ({ conversation, currentUser }) => {
     socket.on("receive-message", handleReceiveMessage);
     socket.on("typing", handleTyping);
     socket.on("online-users", handleOnlineUsers);
+
+    // 🔥 request current online users
+    socket.emit("get-online-users");
 
     return () => {
       socket.off("receive-message", handleReceiveMessage);
