@@ -14,7 +14,7 @@ const ChatWindow = ({ conversation, currentUser }) => {
   const messagesEndRef = useRef(null);
 
   const partner = conversation?.participants?.find(
-    (p) => p._id !== currentUser?._id,
+    (p) => String(p._id) !== String(currentUser?._id),
   );
 
   // Reset messages when switching conversations
@@ -70,7 +70,7 @@ const ChatWindow = ({ conversation, currentUser }) => {
     };
 
     const handleOnlineUsers = (users) => {
-      setIsOnline(users.includes(partner._id));
+      setIsOnline(users.includes(String(partner._id)));
     };
 
     socket.on("receive-message", handleReceiveMessage);
@@ -82,7 +82,7 @@ const ChatWindow = ({ conversation, currentUser }) => {
       socket.off("typing", handleTyping);
       socket.off("online-users", handleOnlineUsers);
     };
-  }, [socket, conversation?._id, partner?._id, currentUser?._id]);
+  }, [socket?.id, conversation?._id, partner?._id, currentUser?._id]);
 
   const handleSend = async (text) => {
     if (!text.trim()) return;
