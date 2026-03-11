@@ -10,6 +10,7 @@
 .nav-links {
   list-style: none;
   display: flex;
+  align-items: center;
   gap: 20px;
 }
 

@@ -14,7 +14,7 @@ export const initSocket = (id) => {
     socket = null;
   }
 
-  socket = io(`${import.meta.env.VITE_BACKEND_URL}`, {
+  socket = io(`${import.meta.env.VITE_BACKEND_URLII}`, {
     withCredentials: true,
     transports: ["websocket"],
     reconnection: true,

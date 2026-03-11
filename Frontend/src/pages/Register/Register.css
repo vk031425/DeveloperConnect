@@ -1,0 +1,88 @@
+/* ===== Page Layout ===== */
+.register-page {
+  min-height: 80vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ===== Register Card ===== */
+.register-container {
+  width: 440px;
+  background: #ffffff;
+  padding: 35px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.register-container h2 {
+  margin-bottom: 25px;
+  color: #222;
+  font-weight: 600;
+}
+
+/* ===== Form ===== */
+.register-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+/* ===== Inputs ===== */
+.register-form input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.register-form input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+}
+
+/* ===== Button ===== */
+.register-form button {
+  width: 100%;
+  height: 42px;
+  border: none;
+  border-radius: 8px;
+  background: #007bff;
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.register-form button:hover {
+  background: #0062cc;
+}
+
+.register-form button:active {
+  transform: scale(0.98);
+}
+
+/* ===== Error Message ===== */
+.register-error {
+  color: #e63946;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 480px) {
+  .register-container {
+    width: 90%;
+    padding: 30px 20px;
+  }
+}
