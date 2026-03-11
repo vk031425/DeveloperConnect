@@ -53,7 +53,7 @@ const Dashboard = () => {
       {!editing ? (
         <div className="profile-card">
           <img
-            src={profile.avatar || "https://via.placeholder.com/120"}
+            src={profile.avatar || "/placeholder.jpg"}
             alt="avatar"
             className="avatar"
           />

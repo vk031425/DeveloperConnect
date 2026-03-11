@@ -122,7 +122,7 @@ const Notifications = () => {
                 className={`notif-item ${n.read ? "" : "unread"}`}
               >
                 <img
-                  src={n.sender?.avatar || "https://via.placeholder.com/40"}
+                  src={n.sender?.avatar || "/placeholder.jpg"}
                   alt="avatar"
                   className="notif-avatar"
                 />

@@ -14,7 +14,7 @@ const ChatWindow = ({ conversation, currentUser }) => {
   const messagesEndRef = useRef(null);
 
   const partner = conversation?.participants?.find(
-    (p) => p._id !== currentUser?._id
+    (p) => p._id !== currentUser?._id,
   );
 
   // Reset messages when switching conversations
@@ -27,7 +27,7 @@ const ChatWindow = ({ conversation, currentUser }) => {
     const loadMessages = async () => {
       try {
         const res = await api.get(
-          `/messages/conversations/${conversation._id}`
+          `/messages/conversations/${conversation._id}`,
         );
 
         setMessages(res.data);
@@ -48,7 +48,6 @@ const ChatWindow = ({ conversation, currentUser }) => {
     if (!socket || !conversation?._id || !partner?._id) return;
 
     const handleReceiveMessage = (message) => {
-
       // Ignore other conversations
       if (message.conversation !== conversation._id) return;
 
@@ -83,11 +82,15 @@ const ChatWindow = ({ conversation, currentUser }) => {
       socket.off("typing", handleTyping);
       socket.off("online-users", handleOnlineUsers);
     };
-
   }, [socket, conversation?._id, partner?._id, currentUser?._id]);
 
   const handleSend = async (text) => {
     if (!text.trim()) return;
+
+    if (!partner?._id) {
+      console.error("Partner not found");
+      return;
+    }
 
     try {
       const res = await api.post("/messages/send", {
@@ -95,15 +98,13 @@ const ChatWindow = ({ conversation, currentUser }) => {
         text,
       });
 
-      // Prevent duplicates
       setMessages((prev) => {
         const exists = prev.some((m) => m._id === res.data._id);
         if (exists) return prev;
         return [...prev, res.data];
       });
-
     } catch (err) {
-      console.error("Error sending message:", err);
+      console.error("Error sending message:", err.response?.data || err);
     }
   };
 
@@ -127,10 +128,9 @@ const ChatWindow = ({ conversation, currentUser }) => {
 
   return (
     <div className="chat-window">
-
       <div className="chat-header">
         <img
-          src={partner.avatar || "https://via.placeholder.com/40"}
+          src={partner.avatar || "/placeholder.jpg"}
           alt="avatar"
           className="conv-avatar"
         />
@@ -149,7 +149,6 @@ const ChatWindow = ({ conversation, currentUser }) => {
       </div>
 
       <div className="chat-messages">
-
         {messages.map((msg) => (
           <div
             key={msg._id}
@@ -171,11 +170,9 @@ const ChatWindow = ({ conversation, currentUser }) => {
         ))}
 
         <div ref={messagesEndRef} />
-
       </div>
 
       <MessageInput onSend={handleSend} onTyping={handleTyping} />
-
     </div>
   );
 };

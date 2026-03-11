@@ -279,7 +279,7 @@ const Profile = () => {
                     onClick={() => setShowFollowers(false)}
                   >
                     <img
-                      src={f.avatar || "https://via.placeholder.com/40"}
+                      src={f.avatar || "/placeholder.jpg"}
                       alt=""
                     />
                     <span>@{f.username}</span>
@@ -313,7 +313,7 @@ const Profile = () => {
                     onClick={() => setShowFollowing(false)}
                   >
                     <img
-                      src={f.avatar || "https://via.placeholder.com/40"}
+                      src={f.avatar || "/placeholder.jpg"}
                       alt=""
                     />
                     <span>@{f.username}</span>
