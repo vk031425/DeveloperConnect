@@ -49,7 +49,7 @@ const PostCard = ({ post, onLikeToggle, onCommentAdded, currentUser }) => {
       <div className="post-header">
         <div className="post-header-left">
           <img
-            src={post.author?.avatar || "/default-avatar.png"}
+            src={post.author?.avatar || "/placeholder.jpg"}
             alt="avatar"
             className="post-avatar"
           />

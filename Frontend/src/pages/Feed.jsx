@@ -14,7 +14,7 @@ const Feed = () => {
     const fetchFeed = async () => {
       try {
         const res = await api.get("/posts/feed");
-        setPosts(res.data.reverse());
+        setPosts(res.data);
       } catch (err) {
         console.error("Error fetching feed:", err.response?.data || err.message);
       } finally {
@@ -67,7 +67,7 @@ const Feed = () => {
             <PostCard
               key={post._id}
               post={post}
-              currentauthData={authData} // ✅ pass here
+              currentUser={authData?.user}
               onLikeToggle={handleLikeToggle}
               onCommentAdded={handleCommentAdded}
             />
