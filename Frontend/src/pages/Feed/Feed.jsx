@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import api from "../api/axiosConfig";
-import PostCard from "../components/PostCard";
-import CreatePostForm from "../components/CreatePostForm";
-import { useAuth } from "../context/AuthContext";
-import "../styles/Feed.css";
+import api from "../../api/axiosConfig";
+import PostCard from "../../components/PostCard/PostCard";
+import CreatePostForm from "../../components/CreatePostForm/CreatePostForm";
+import { useAuth } from "../../context/AuthContext";
+import "./Feed.css";
 
 const Feed = () => {
   const [posts, setPosts] = useState([]);

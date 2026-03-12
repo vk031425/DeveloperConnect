@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../api/axiosConfig";
-import "../styles/PostCard.css";
+import api from "../../api/axiosConfig";
+import "./PostCard.css";
 
 const PostCard = ({ post, onLikeToggle, onCommentAdded, currentUser }) => {
   const [commentText, setCommentText] = useState("");

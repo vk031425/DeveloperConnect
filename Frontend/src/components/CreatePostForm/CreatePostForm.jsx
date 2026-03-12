@@ -1,11 +1,13 @@
 import { useState } from "react";
-import api from "../api/axiosConfig";
+import api from "../../api/axiosConfig";
+import "./CreatePostForm.css";
 
 const CreatePostForm = ({ onPostCreated }) => {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,6 +24,7 @@ const CreatePostForm = ({ onPostCreated }) => {
       onPostCreated(res.data);
       setText("");
       setImage(null);
+      setPreview(null);
     } catch (err) {
       setError("Failed to create post");
     }
@@ -38,8 +41,19 @@ const CreatePostForm = ({ onPostCreated }) => {
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => setImage(e.target.files[0])}
+          onChange={(e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            setImage(file);
+            setPreview(URL.createObjectURL(file));
+          }}
         />
+        {preview && (
+          <div className="image-preview">
+            <img src={preview} alt="preview" />
+          </div>
+        )}
         {error && <p style={{ color: "red" }}>{error}</p>}
         <button type="submit" disabled={loading}>
           {loading ? "Posting..." : "Post"}

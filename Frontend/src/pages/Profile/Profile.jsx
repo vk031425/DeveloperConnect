@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../../api/axiosConfig";
-import PostCard from "../../components/PostCard";
+import PostCard from "../../components/PostCard/PostCard";
 import { useAuth } from "../../context/AuthContext";
 import "./Profile.css";
 
