@@ -6,6 +6,7 @@ import { useNotifications } from "../../context/NotificationContext";
 import ConversationList from "../../components/ConversationList/ConversationList";
 import ChatWindow from "../../components/ChatWindow/ChatWindow";
 import "./Messages.css";
+import { useSocket } from "../../context/SocketContext";
 
 const Messages = () => {
   const { authData } = useAuth();
