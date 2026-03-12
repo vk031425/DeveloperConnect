@@ -8,7 +8,7 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
 
-  // 🧠 Fetch notifications from backend
+  //  Fetch notifications from backend
   const fetchNotifications = async () => {
     try {
       const res = await api.get("/notifications");
@@ -18,7 +18,7 @@ const Notifications = () => {
     }
   };
 
-  // ✅ Mark all as read (and notify via socket)
+  // Mark all as read (and notify via socket)
   const markAsRead = async () => {
     try {
       await api.put("/notifications/read");
@@ -45,7 +45,7 @@ const Notifications = () => {
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     };
 
-    // ⚡ Listen for real-time updates
+    // Listen for real-time updates
     s.on("new-notification", handleNewNotification);
     s.on("notifications-read", handleNotificationsRead);
 
@@ -102,13 +102,13 @@ const Notifications = () => {
 
   return (
     <div className="notif-container">
-      {/* 🔔 Bell icon */}
+      {/* Bell icon */}
       <button className="notif-bell" onClick={toggleOpen}>
         🔔{" "}
         {unreadCount > 0 && <span className="notif-count">{unreadCount}</span>}
       </button>
 
-      {/* 📬 Dropdown */}
+      {/* Dropdown */}
       {open && (
         <div className="notif-dropdown">
           <h4>Notifications</h4>
