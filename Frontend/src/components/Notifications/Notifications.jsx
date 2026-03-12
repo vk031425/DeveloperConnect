@@ -8,7 +8,7 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
 
-  //  Fetch notifications from backend
+  //  Fetch notifications from backendghjg
   const fetchNotifications = async () => {
     try {
       const res = await api.get("/notifications");
