@@ -74,10 +74,7 @@ const ConversationList = ({
 
           const isActive = selectedChat?._id === conv._id;
 
-          const isUnread =
-            conv.lastMessage &&
-            conv.lastMessage.sender._id !== authDataId &&
-            !conv.lastMessage.read;
+          const isUnread = conv.unreadCount > 0;
 
           const isOnline = onlineUsers.has(partner?._id);
 

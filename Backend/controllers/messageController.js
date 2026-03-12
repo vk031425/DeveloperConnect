@@ -6,7 +6,7 @@ import {
 } from "../socket/socketHandler.js";
 import User from "../models/User.js";
 
-/* 🧠 Get all conversations for logged-in user */
+/* Get all conversations for logged-in user */
 export const getConversations = async (req, res) => {
   try {
     const conversations = await Conversation.find({
@@ -19,7 +19,22 @@ export const getConversations = async (req, res) => {
       .populate("lastMessage")
       .sort({ updatedAt: -1 });
 
-    res.json(conversations);
+    const conversationsWithUnread = await Promise.all(
+      conversations.map(async (conv) => {
+        const unreadCount = await Message.countDocuments({
+          conversation: conv._id,
+          sender: { $ne: req.user._id },
+          read: false,
+        });
+
+        return {
+          ...conv.toObject(),
+          unreadCount,
+        };
+      }),
+    );
+
+    res.json(conversationsWithUnread);
   } catch (err) {
     console.error("getConversations error:", err);
     res.status(500).json({ message: err.message });
@@ -33,15 +48,28 @@ export const getMessages = async (req, res) => {
       .populate("sender", "username avatar")
       .sort({ createdAt: 1 });
 
-    // ✅ Auto-mark messages as read when fetching
+    // Mark unread messages as read
     await Message.updateMany(
       {
         conversation: req.params.id,
         read: false,
         sender: { $ne: req.user._id },
       },
-      { $set: { read: true } },
+      { $set: { read: true } }
     );
+
+    // Find conversation to identify the other user
+    const conversation = await Conversation.findById(req.params.id);
+
+    const receiver = conversation.participants.find(
+      (p) => p.toString() !== req.user._id.toString()
+    );
+
+    // Notify sender messages were seen
+    sendMessageToUser(receiver, {
+      type: "message-seen",
+      conversation: req.params.id,
+    });
 
     res.json(messages);
   } catch (err) {

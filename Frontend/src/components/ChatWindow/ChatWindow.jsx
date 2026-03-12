@@ -69,9 +69,21 @@ const ChatWindow = ({ conversation, currentUser }) => {
       setIsOnline(users.includes(String(partner._id)));
     };
 
+    // 🔹 NEW: handle message seen event
+    const handleMessageSeen = (data) => {
+      if (data.conversation !== conversation._id) return;
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.sender._id === currentUser._id ? { ...m, read: true } : m
+        )
+      );
+    };
+
     socket.on("receive-message", handleReceiveMessage);
     socket.on("typing", handleTyping);
     socket.on("online-users", handleOnlineUsers);
+    socket.on("message-seen", handleMessageSeen);
 
     // 🔥 request current online users
     socket.emit("get-online-users");
@@ -80,6 +92,7 @@ const ChatWindow = ({ conversation, currentUser }) => {
       socket.off("receive-message", handleReceiveMessage);
       socket.off("typing", handleTyping);
       socket.off("online-users", handleOnlineUsers);
+      socket.off("message-seen", handleMessageSeen);
     };
   }, [socket?.id, conversation?._id, partner?._id, currentUser?._id]);
 
@@ -148,25 +161,35 @@ const ChatWindow = ({ conversation, currentUser }) => {
       </div>
 
       <div className="chat-messages">
-        {messages.map((msg) => (
-          <div
-            key={msg._id}
-            className={`message ${
-              msg.sender._id === currentUser._id ? "sent" : "received"
-            }`}
-          >
-            <div className="message-bubble">
-              {msg.text}
+        {messages.map((msg, index) => {
+          const isLastMessage = index === messages.length - 1;
+          const isMyMessage = msg.sender._id === currentUser._id;
 
-              <span className="timestamp">
-                {new Date(msg.createdAt).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
+          return (
+            <div
+              key={msg._id}
+              className={`message ${
+                isMyMessage ? "sent" : "received"
+              }`}
+            >
+              <div className="message-bubble">
+                {msg.text}
+
+                <span className="timestamp">
+                  {new Date(msg.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+
+              {/* 🔹 Seen indicator */}
+              {isMyMessage && isLastMessage && msg.read && (
+                <div className="seen-indicator">Seen</div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         <div ref={messagesEndRef} />
       </div>
