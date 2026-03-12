@@ -111,10 +111,15 @@ export const sendNotification = (userId, notification) => {
   }
 };
 
-export const sendMessageToUser = (receiverId, message) => {
+export const sendMessageToUser = (receiverId, payload) => {
   if (!io || !receiverId) return;
+
   const socketId = onlineUsers.get(receiverId.toString());
-  if (socketId) {
-    io.to(socketId).emit("receive-message", message);
+  if (!socketId) return;
+
+  if (payload.type === "message-seen") {
+    io.to(socketId).emit("message-seen", payload);
+  } else {
+    io.to(socketId).emit("receive-message", payload);
   }
 };

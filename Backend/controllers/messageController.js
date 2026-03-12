@@ -41,7 +41,7 @@ export const getConversations = async (req, res) => {
   }
 };
 
-/* 💬 Get all messages in a conversation */
+/* Get all messages in a conversation */
 export const getMessages = async (req, res) => {
   try {
     const messages = await Message.find({ conversation: req.params.id })
@@ -142,28 +142,31 @@ export const markAsRead = async (req, res) => {
   try {
     const { id } = req.params;
 
+    const unreadMessages = await Message.find({
+      conversation: id,
+      read: false,
+      sender: { $ne: req.user._id },
+    });
+
     await Message.updateMany(
       {
         conversation: id,
         read: false,
         sender: { $ne: req.user._id },
       },
-      { $set: { read: true } },
+      { $set: { read: true } }
     );
 
-    const conversation = await Conversation.findById(id);
-
-    const otherUser = conversation.participants.find(
-      (p) => p.toString() !== req.user._id.toString(),
-    );
-
-    // 🔔 notify sender that messages were seen
-    sendMessageToUser(otherUser, {
-      type: "message-seen",
-      conversation: id,
+    // notify original senders
+    unreadMessages.forEach((msg) => {
+      sendMessageToUser(msg.sender, {
+        type: "message-seen",
+        conversation: id,
+      });
     });
 
     res.json({ success: true });
+
   } catch (err) {
     console.error("markAsRead error:", err);
     res.status(500).json({ message: err.message });
