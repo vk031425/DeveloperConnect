@@ -45,6 +45,8 @@ const ConversationList = ({
         const updated = prev.map((conv) => {
           if (conv._id !== data.conversation) return conv;
 
+          const isActive = selectedChat?._id === data.conversation;
+
           return {
             ...conv,
             lastMessage: {
@@ -52,8 +54,9 @@ const ConversationList = ({
               text: data.text,
               sender: { _id: data.senderId },
               createdAt: new Date(),
-              read: false,
+              read: isActive,
             },
+            unreadCount: isActive ? 0 : (conv.unreadCount || 0) + 1,
           };
         });
 
@@ -110,7 +113,8 @@ const ConversationList = ({
 
           const isActive = selectedChat?._id === conv._id;
 
-          const isUnread = conv.unreadCount > 0;
+          const isUnread =
+            conv.unreadCount > 0 && selectedChat?._id !== conv._id;
 
           const isOnline = onlineUsers.has(partner?._id);
 

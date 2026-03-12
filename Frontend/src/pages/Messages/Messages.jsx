@@ -29,14 +29,13 @@ const Messages = () => {
       } catch (err) {
         console.error(
           "Error marking inbox seen:",
-          err.response?.data || err.message
+          err.response?.data || err.message,
         );
       }
     };
 
     openInbox();
     fetchConversations();
-
   }, [authData]);
 
   const fetchConversations = async () => {
@@ -44,12 +43,18 @@ const Messages = () => {
       const res = await api.get("/messages/conversations");
       setConversations(res.data);
 
+      const unreadConversations = res.data.filter(
+        (c) => c.unreadCount > 0,
+      ).length;
+
+      setUnreadCount(unreadConversations);
+
       // Auto-open chat if redirected from profile
       if (location.state?.openChatWith) {
         const targetUser = location.state.openChatWith;
 
         const existingChat = res.data.find((c) =>
-          c.participants.some((p) => p._id === targetUser._id)
+          c.participants.some((p) => p._id === targetUser._id),
         );
 
         if (existingChat) {
@@ -66,15 +71,47 @@ const Messages = () => {
     } catch (err) {
       console.error(
         "Error fetching conversations:",
-        err.response?.data || err.message
+        err.response?.data || err.message,
       );
     }
   };
 
+  const socket = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessageAlert = (data) => {
+      setConversations((prev) => {
+        const updated = prev.map((conv) => {
+          if (conv._id !== data.conversation) return conv;
+
+          const isActive = selectedChat?._id === data.conversation;
+
+          return {
+            ...conv,
+            unreadCount: isActive ? 0 : (conv.unreadCount || 0) + 1,
+          };
+        });
+
+        const unreadConversations = updated.filter(
+          (c) => c.unreadCount > 0,
+        ).length;
+
+        setUnreadCount(unreadConversations);
+
+        return updated;
+      });
+    };
+
+    socket.on("new-message-alert", handleNewMessageAlert);
+
+    return () => socket.off("new-message-alert", handleNewMessageAlert);
+  }, [socket, selectedChat]);
+
   return (
     <div className="messages-page">
       <div className="messages-container">
-
         <ConversationList
           conversations={conversations}
           authDataId={authData?.user?._id}
@@ -83,16 +120,12 @@ const Messages = () => {
         />
 
         {selectedChat ? (
-          <ChatWindow
-            conversation={selectedChat}
-            currentUser={authData.user}
-          />
+          <ChatWindow conversation={selectedChat} currentUser={authData.user} />
         ) : (
           <div className="no-chat">
             <p>Select a conversation to start chatting</p>
           </div>
         )}
-
       </div>
     </div>
   );
