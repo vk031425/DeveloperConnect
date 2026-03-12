@@ -67,7 +67,11 @@ const Notifications = () => {
   // 🧩 Render message text based on type
   const renderMessage = (n) => {
     const senderLink = (
-      <Link to={`/profile/${n.sender?.username}`} onClick={() => setOpen(false)}>
+      <Link
+        to={`/profile/${n.sender?.username}`}
+        onClick={() => setOpen(false)}
+        style={{ color: "#222", fontWeight: "600", textDecoration: "none" }}
+      >
         @{n.sender?.username}
       </Link>
     );
@@ -79,7 +83,15 @@ const Notifications = () => {
         return (
           <>
             {senderLink} liked your{" "}
-            <Link to={`/post/${n.post?._id}`} onClick={() => setOpen(false)}>
+            <Link
+              to={`/post/${n.post?._id}`}
+              onClick={() => setOpen(false)}
+              style={{
+                color: "#222",
+                fontWeight: "600",
+                textDecoration: "none",
+              }}
+            >
               post
             </Link>
           </>
