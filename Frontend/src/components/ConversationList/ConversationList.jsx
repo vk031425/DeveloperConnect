@@ -36,6 +36,42 @@ const ConversationList = ({
     };
   }, [socket]);
 
+  // Listen for new messages to update sidebar instantly
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessageAlert = (data) => {
+      setLocalConversations((prev) => {
+        const updated = prev.map((conv) => {
+          if (conv._id !== data.conversation) return conv;
+
+          return {
+            ...conv,
+            lastMessage: {
+              ...conv.lastMessage,
+              text: data.text,
+              sender: { _id: data.senderId },
+              createdAt: new Date(),
+              read: false,
+            },
+          };
+        });
+
+        // move conversation to top
+        const target = updated.find((c) => c._id === data.conversation);
+        const others = updated.filter((c) => c._id !== data.conversation);
+
+        return target ? [target, ...others] : prev;
+      });
+    };
+
+    socket.on("new-message-alert", handleNewMessageAlert);
+
+    return () => {
+      socket.off("new-message-alert", handleNewMessageAlert);
+    };
+  }, [socket]);
+
   const handleSelect = async (conv) => {
     try {
       // mark messages read in backend
@@ -51,8 +87,8 @@ const ConversationList = ({
                   ? { ...c.lastMessage, read: true }
                   : c.lastMessage,
               }
-            : c
-        )
+            : c,
+        ),
       );
 
       onSelect(conv);
@@ -102,12 +138,13 @@ const ConversationList = ({
 
                   {conv.lastMessage?.createdAt && (
                     <span className="conv-time">
-                      {new Date(
-                        conv.lastMessage.createdAt
-                      ).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {new Date(conv.lastMessage.createdAt).toLocaleTimeString(
+                        [],
+                        {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )}
                     </span>
                   )}
                 </div>

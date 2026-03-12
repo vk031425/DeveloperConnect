@@ -47,7 +47,7 @@ const ChatWindow = ({ conversation, currentUser }) => {
   useEffect(() => {
     if (!socket || !conversation?._id || !partner?._id) return;
 
-    const handleReceiveMessage = (message) => {
+    const handleReceiveMessage = async (message) => {
       if (message.conversation !== conversation._id) return;
       if (message.sender._id === currentUser._id) return;
 
@@ -56,6 +56,13 @@ const ChatWindow = ({ conversation, currentUser }) => {
         if (exists) return prev;
         return [...prev, message];
       });
+
+      // mark read instantly if chat is open
+      try {
+        await api.put(`/messages/mark-read/${conversation._id}`);
+      } catch (err) {
+        console.error("Error marking read:", err);
+      }
     };
 
     const handleTyping = (senderId) => {
@@ -75,8 +82,8 @@ const ChatWindow = ({ conversation, currentUser }) => {
 
       setMessages((prev) =>
         prev.map((m) =>
-          m.sender._id === currentUser._id ? { ...m, read: true } : m
-        )
+          m.sender._id === currentUser._id ? { ...m, read: true } : m,
+        ),
       );
     };
 
@@ -168,9 +175,7 @@ const ChatWindow = ({ conversation, currentUser }) => {
           return (
             <div
               key={msg._id}
-              className={`message ${
-                isMyMessage ? "sent" : "received"
-              }`}
+              className={`message ${isMyMessage ? "sent" : "received"}`}
             >
               <div className="message-bubble">
                 {msg.text}

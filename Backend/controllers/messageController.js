@@ -55,14 +55,14 @@ export const getMessages = async (req, res) => {
         read: false,
         sender: { $ne: req.user._id },
       },
-      { $set: { read: true } }
+      { $set: { read: true } },
     );
 
     // Find conversation to identify the other user
     const conversation = await Conversation.findById(req.params.id);
 
     const receiver = conversation.participants.find(
-      (p) => p.toString() !== req.user._id.toString()
+      (p) => p.toString() !== req.user._id.toString(),
     );
 
     // Notify sender messages were seen
@@ -141,10 +141,28 @@ export const sendMessage = async (req, res) => {
 export const markAsRead = async (req, res) => {
   try {
     const { id } = req.params;
+
     await Message.updateMany(
-      { conversation: id, read: false, sender: { $ne: req.user._id } },
+      {
+        conversation: id,
+        read: false,
+        sender: { $ne: req.user._id },
+      },
       { $set: { read: true } },
     );
+
+    const conversation = await Conversation.findById(id);
+
+    const otherUser = conversation.participants.find(
+      (p) => p.toString() !== req.user._id.toString(),
+    );
+
+    // 🔔 notify sender that messages were seen
+    sendMessageToUser(otherUser, {
+      type: "message-seen",
+      conversation: id,
+    });
+
     res.json({ success: true });
   } catch (err) {
     console.error("markAsRead error:", err);
