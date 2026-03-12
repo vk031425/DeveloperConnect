@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../../api/axiosConfig";
 import { Link } from "react-router-dom";
 import { getSocket } from "../../socket";
-import "/Notifications.css";
+import "./Notifications.css";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
