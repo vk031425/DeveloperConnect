@@ -112,14 +112,17 @@
   font-size: 14px;
 }
 
-.notif-text a {
-  color: #222;
+/* Make notification links clearly visible */
+.notif-item .notif-text a,
+.notif-item .notif-text a:visited {
+  color: #222 !important;
+  /* force dark text */
   font-weight: 600;
   text-decoration: none;
 }
 
-.notif-text a:hover {
-  color: #007bff;
+.notif-item .notif-text a:hover {
+  color: #007bff !important;
   text-decoration: underline;
 }
 

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import Notifications from "../Notifications";
+import Notifications from "../Notifications/Notifications";
 import "./Navbar.css";
 import { useState } from "react";
 import api from "../../api/axiosConfig";
