@@ -14,11 +14,15 @@ import ProtectedRoute from "./components/ProtectedRoute";
 const HomeRedirect = () => {
   const { authData } = useAuth();
 
-  if (authData?.user) {
-    return <Navigate to="/feed" replace />;
-  } else {
-    return <Navigate to="/login" replace />;
+  if (authData.loading) {
+    return null; // wait for auth verification
   }
+
+  if (authData.user) {
+    return <Navigate to="/feed" replace />;
+  }
+
+  return <Navigate to="/login" replace />;
 };
 
 const App = () => {
