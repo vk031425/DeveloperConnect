@@ -55,6 +55,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -112,12 +113,19 @@
 }
 
 .notif-text a {
-  color: #007bff;
+  color: #222;
+  font-weight: 600;
   text-decoration: none;
 }
 
 .notif-text a:hover {
+  color: #007bff;
   text-decoration: underline;
+}
+
+.notif-text p {
+  margin: 0;
+  line-height: 1.4;
 }
 
 .notif-time {
