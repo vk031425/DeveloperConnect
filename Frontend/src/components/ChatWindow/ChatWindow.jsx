@@ -49,7 +49,7 @@ const ChatWindow = ({ conversation, currentUser }) => {
 
     const handleReceiveMessage = async (message) => {
       if (message.conversation !== conversation._id) return;
-      // if (message.sender._id === currentUser._id) return;
+      if (message.sender._id === currentUser._id) return;
 
       if (message.sender._id === currentUser._id && message.t0) {
         const latency = Date.now() - message.t0;

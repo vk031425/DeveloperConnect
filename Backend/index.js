@@ -40,6 +40,10 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/messages", messageRoutes);
 
 // Root route
+app.get("/load-test", async (req, res) => {
+  await new Promise((resolve) => setTimeout(resolve, 50)); // simulate work
+  res.json({ success: true });
+});
 app.get("/", (req, res) => {
   res.send("Developer Connect API is running");
 });
