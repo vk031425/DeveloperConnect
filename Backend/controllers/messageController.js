@@ -44,9 +44,14 @@ export const getConversations = async (req, res) => {
 /* Get all messages in a conversation */
 export const getMessages = async (req, res) => {
   try {
+    const start = Date.now();
+
     const messages = await Message.find({ conversation: req.params.id })
       .populate("sender", "username avatar")
       .sort({ createdAt: 1 });
+
+    const queryTime = Date.now() - start;
+    console.log("DB Query Time (messages):", queryTime, "ms");
 
     // Mark unread messages as read
     await Message.updateMany(
