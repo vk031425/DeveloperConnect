@@ -51,6 +51,11 @@ const ChatWindow = ({ conversation, currentUser }) => {
       if (message.conversation !== conversation._id) return;
       if (message.sender._id === currentUser._id) return;
 
+      if (message.t0) {
+        const latency = Date.now() - message.t0;
+        console.log("Message Latency:", latency, "ms");
+      }
+
       setMessages((prev) => {
         const exists = prev.some((m) => m._id === message._id);
         if (exists) return prev;
@@ -112,9 +117,12 @@ const ChatWindow = ({ conversation, currentUser }) => {
     }
 
     try {
+      const t0 = Date.now();
+
       const res = await api.post("/messages/send", {
         receiverId: partner._id,
         text,
+        t0,
       });
 
       setMessages((prev) => {

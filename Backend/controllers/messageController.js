@@ -81,7 +81,7 @@ export const getMessages = async (req, res) => {
 /* ✉️ Send a message (create conversation if missing) */
 export const sendMessage = async (req, res) => {
   try {
-    const { receiverId, text } = req.body;
+    const { receiverId, text, t0 } = req.body;
     if (!receiverId || !text)
       return res.status(400).json({ message: "Missing fields" });
 
@@ -115,6 +115,7 @@ export const sendMessage = async (req, res) => {
     sendMessageToUser(receiverId, {
       ...message.toObject(),
       conversation: conversation._id,
+      t0,
     });
 
     // 🚫 No Notification in DB for message
@@ -130,6 +131,7 @@ export const sendMessage = async (req, res) => {
     res.status(201).json({
       ...message.toObject(),
       conversation: conversation._id,
+      t0,
     });
   } catch (err) {
     console.error("sendMessage error:", err);
@@ -154,7 +156,7 @@ export const markAsRead = async (req, res) => {
         read: false,
         sender: { $ne: req.user._id },
       },
-      { $set: { read: true } }
+      { $set: { read: true } },
     );
 
     // notify original senders
@@ -166,7 +168,6 @@ export const markAsRead = async (req, res) => {
     });
 
     res.json({ success: true });
-
   } catch (err) {
     console.error("markAsRead error:", err);
     res.status(500).json({ message: err.message });
